@@ -2,6 +2,7 @@ package com.example.ClaimShieldX.organization;
 
 import com.example.ClaimShieldX.exceptions.OrganizationNameAlreadyExistException;
 import com.example.ClaimShieldX.organization.dto.OrganizationCreateRequest;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,5 +25,9 @@ public class OrganizationService {
             throw new OrganizationNameAlreadyExistException(request.name());
         organization = toEntity(request);
         return this.organizationRepository.save(organization);
+    }
+
+    public Organization findByName(@NotBlank(message = "Org. name cannot be blank") String orgName) {
+        return  organizationRepository.findByName(orgName);
     }
 }
