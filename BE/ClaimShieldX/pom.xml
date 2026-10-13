@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<spring-ai.version>2.0.1</spring-ai.version>
+		<flyway.version>13.9.0</flyway.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -59,6 +60,42 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Flyway Core Migration Engine -->
+<!--		<dependency>-->
+<!--			<groupId>org.flywaydb</groupId>-->
+<!--			<artifactId>flyway-core</artifactId>-->
+<!--&lt;!&ndash;			<version>${flyway.version}</version>&ndash;&gt;-->
+<!--		</dependency>-->
+<!--		&lt;!&ndash; Source: https://mvnrepository.com/artifact/org.flywaydb/flyway-database-postgresql &ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>org.flywaydb</groupId>-->
+<!--			<artifactId>flyway-database-postgresql</artifactId>-->
+<!--&lt;!&ndash;			<version>${flyway.version}</version>&ndash;&gt;-->
+<!--		</dependency>-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+
+		<!-- 2. The database adapter required for PostgreSQL -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- Source: https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.7.13</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
