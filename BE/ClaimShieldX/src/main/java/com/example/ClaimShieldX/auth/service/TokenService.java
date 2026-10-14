@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -72,5 +73,31 @@ public class TokenService {
                 .parseSignedClaims(token)
                 .getPayload();
         return claims.get(claimName);
+    }
+
+    public String extractSubject(String token){
+        var key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    public boolean isTokenExpired(String token){
+        var key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        Date expirationDate = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getExpiration();
+        return expirationDate.before(new Date());
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractSubject(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 }
