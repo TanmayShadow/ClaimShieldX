@@ -24,10 +24,18 @@ public class RefreshTokenService {
     public RefreshToken createRefreshToken(UUID userId){
         long EXPIRATION_TIME = 604800000;
 
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setUser(userRepository.findById(userId).get());
-        refreshToken.setExpiryDate(Instant.now().plusMillis(EXPIRATION_TIME)); // 7 Days
-        refreshToken.setToken(UUID.randomUUID().toString());
+        RefreshToken refreshToken = refreshTokenRepository.findByUser_Id(userId)
+                .map(existingToken->{
+                    existingToken.setToken(UUID.randomUUID().toString());
+                    existingToken.setExpiryDate(Instant.now().plusMillis(EXPIRATION_TIME));
+                    return existingToken;
+                }).orElseGet(() -> {
+                    RefreshToken newToken = new RefreshToken();
+                    newToken.setUser(userRepository.findById(userId).get());
+                    newToken.setExpiryDate(Instant.now().plusMillis(EXPIRATION_TIME)); // 7 Days
+                    newToken.setToken(UUID.randomUUID().toString());
+                    return newToken;
+                });
 
         return refreshTokenRepository.save(refreshToken);
     }
