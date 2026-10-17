@@ -58,6 +58,8 @@ class GlobalExceptionHandlerTests {
         assertBody(handler.handleRequestInProgress(new RequestInProgressException()), HttpStatus.CONFLICT, "REQUEST_IN_PROGRESS");
         assertBody(handler.handleUploadTooLarge(new MaxUploadSizeExceededException(1024)), HttpStatus.PAYLOAD_TOO_LARGE, "PAYLOAD_TOO_LARGE");
         assertBody(handler.handleMultipartProblem(new MultipartException("broken")), HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST");
+        assertBody(handler.handleExtractionNotSupported(new ExtractionNotSupportedException(com.example.ClaimShieldX.documents.model.DocumentType.CLAIM_FORM)),
+                HttpStatus.UNPROCESSABLE_ENTITY, "EXTRACTION_NOT_SUPPORTED");
     }
 
     @Test

@@ -125,6 +125,14 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Counts the pages of an uploaded PDF, so cited page numbers can be checked against the real document,
+		     and builds the synthetic PDFs used by the extraction tests -->
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>3.0.5</version>
+		</dependency>
+
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>

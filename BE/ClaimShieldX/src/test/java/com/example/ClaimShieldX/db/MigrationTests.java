@@ -81,6 +81,7 @@ class MigrationTests {
                 assertThat(scalar(connection, "select column_default from information_schema.columns where table_name = 'users' and column_name = 'role'")).contains("INVESTIGATOR");
                 // 3 stages x 13 document types, plus 6 theft overrides.
                 assertThat(scalar(connection, "select count(*) from document_requirements")).isEqualTo("45");
+                assertThat(scalar(connection, "select data_type from information_schema.columns where table_name = 'document_extractions' and column_name = 'result'")).isEqualTo("jsonb");
             }
         });
     }
