@@ -26,4 +26,8 @@ public class User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="organization_id", nullable = false)
     private Organization organization;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private UserRole role = UserRole.INVESTIGATOR;
 }

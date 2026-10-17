@@ -24,13 +24,15 @@ final class ClaimPayloads {
                   },
                   "claimant": { "claimantToken": "CLT-TOKEN-1001" },
                   "garage": { "garageId": "GARAGE-DEMO-10" },
+                  "vehicle": { "vehicleToken": "VEH-TOKEN-1001", "make": "DEMO_MAKE", "model": "DEMO_MODEL" },
                   "incident": {
                     "incidentAt": "2026-09-10T10:30:00+05:30",
                     "reportedAt": "2026-09-11T09:00:00+05:30",
+                    "incidentType": "COLLISION",
                     "permittedLocationPrecision": "CITY"
                   },
                   "financial": {
-                    "initialEstimateAmount": 45000,
+                    "initialEstimateAmount": 45000.50,
                     "approvedEstimateAmount": null,
                     "currency": "INR",
                     "deductible": 1000

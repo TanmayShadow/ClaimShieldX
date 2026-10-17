@@ -2,6 +2,8 @@ package com.example.ClaimShieldX.claims.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,6 +19,10 @@ public class Incident {
 
     @Column(name="reported_at")
     private Instant reportedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="incident_type")
+    private IncidentType incidentType;
 
     @Column(name="permitted_location_precision")
     private String permittedLocationPrecision;

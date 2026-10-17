@@ -24,6 +24,9 @@ public record ClaimCreationRequest(
          @NotNull(message = "Garage details cannot be null")
          @Valid
          GarageDto garage,
+         @NotNull(message = "Vehicle details cannot be null")
+         @Valid
+         VehicleDto vehicle,
          @NotNull(message = "Incident details cannot be null")
          @Valid
          IncidentDto incident,

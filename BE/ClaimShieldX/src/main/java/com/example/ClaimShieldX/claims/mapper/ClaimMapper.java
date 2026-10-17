@@ -5,6 +5,8 @@ import com.example.ClaimShieldX.claims.dto.*;
 import com.example.ClaimShieldX.claims.model.*;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 
 @Component
@@ -17,6 +19,7 @@ public class ClaimMapper {
         claim.setPolicy(toPolicy(request.policy()));
         claim.setClaimant(toClaimant(request.claimant()));
         claim.setGarage(toGarage(request.garage()));
+        claim.setVehicle(toVehicle(request.vehicle()));
         claim.setIncident(toIncident(request.incident()));
         claim.setFinancial(toFinancial(request.financial()));
         claim.setOrganizationId(userPrincipal.getOrganization().getId());
@@ -41,6 +44,7 @@ public class ClaimMapper {
                 toPolicyDto(claim.getPolicy()),
                 toClaimantDto(claim.getClaimant()),
                 toGarageDto(claim.getGarage()),
+                toVehicleDto(claim.getVehicle()),
                 toIncidentDto(claim.getIncident()),
                 toFinancialDto(claim.getFinancial()),
                 claim.getCreatedAt(),
@@ -71,21 +75,36 @@ public class ClaimMapper {
         return garage;
     }
 
+    // Tokens are opaque and matched exactly, but surrounding whitespace is never significant.
+    private Vehicle toVehicle(VehicleDto dto){
+        Vehicle vehicle = new Vehicle();
+        vehicle.setVehicleToken(dto.vehicleToken().strip());
+        vehicle.setMake(dto.make());
+        vehicle.setModel(dto.model());
+        return vehicle;
+    }
+
     private Incident toIncident(IncidentDto dto){
         Incident incident = new Incident();
         incident.setIncidentAt(dto.incidentAt());
         incident.setReportedAt(dto.reportedAt());
+        incident.setIncidentType(dto.incidentType());
         incident.setPermittedLocationPrecision(dto.permittedLocationPrecision());
         return incident;
     }
 
     private Financial toFinancial(FinancialDto dto){
         Financial financial = new Financial();
-        financial.setInitialEstimateAmount(dto.initialEstimateAmount());
-        financial.setApprovedEstimateAmount(dto.approvedEstimateAmount());
+        financial.setInitialEstimateAmount(money(dto.initialEstimateAmount()));
+        financial.setApprovedEstimateAmount(money(dto.approvedEstimateAmount()));
         financial.setCurrency(dto.currency());
-        financial.setDeductible(dto.deductible());
+        financial.setDeductible(money(dto.deductible()));
         return financial;
+    }
+
+    // Validation already rejected more than 2 decimals, so UNNECESSARY can never throw; it states that nothing is rounded.
+    private BigDecimal money(BigDecimal amount){
+        return amount == null ? null : amount.setScale(2, RoundingMode.UNNECESSARY);
     }
 
     private PolicyDto toPolicyDto(Policy policy){
@@ -106,10 +125,16 @@ public class ClaimMapper {
         return new GarageDto(garage.getGarageId());
     }
 
+    private VehicleDto toVehicleDto(Vehicle vehicle){
+        if(vehicle == null)
+            return null;
+        return new VehicleDto(vehicle.getVehicleToken(), vehicle.getMake(), vehicle.getModel());
+    }
+
     private IncidentDto toIncidentDto(Incident incident){
         if(incident == null)
             return null;
-        return new IncidentDto(incident.getIncidentAt(), incident.getReportedAt(), incident.getPermittedLocationPrecision());
+        return new IncidentDto(incident.getIncidentAt(), incident.getReportedAt(), incident.getIncidentType(), incident.getPermittedLocationPrecision());
     }
 
     private FinancialDto toFinancialDto(Financial financial){

@@ -2,6 +2,7 @@ package com.example.ClaimShieldX.claims;
 
 import com.example.ClaimShieldX.auth.model.User;
 import com.example.ClaimShieldX.auth.model.UserPrincipal;
+import com.example.ClaimShieldX.auth.model.UserRole;
 import com.example.ClaimShieldX.auth.repository.UserRepository;
 import com.example.ClaimShieldX.auth.service.TokenService;
 import com.example.ClaimShieldX.organization.Organization;
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Map;
@@ -61,7 +63,7 @@ class ClaimCreationApiTests {
         user.setOrganization(organization);
         userRepository.save(user);
 
-        UserPrincipal principal = new UserPrincipal(user.getId(), user.getEmail(), user.getPassword(), organization);
+        UserPrincipal principal = new UserPrincipal(user.getId(), user.getEmail(), user.getPassword(), organization, user.getRole());
         return new TestUser(user.getId(), organization.getId(), tokenService.generateToken(principal));
     }
 
@@ -93,12 +95,17 @@ class ClaimCreationApiTests {
                 .andExpect(jsonPath("$.policy.policyType").value("COMPREHENSIVE"))
                 .andExpect(jsonPath("$.claimant.claimantToken").value("CLT-TOKEN-1001"))
                 .andExpect(jsonPath("$.garage.garageId").value("GARAGE-DEMO-10"))
+                .andExpect(jsonPath("$.vehicle.vehicleToken").value("VEH-TOKEN-1001"))
+                .andExpect(jsonPath("$.vehicle.make").value("DEMO_MAKE"))
+                .andExpect(jsonPath("$.vehicle.model").value("DEMO_MODEL"))
                 .andExpect(jsonPath("$.incident.incidentAt").value("2026-09-10T05:00:00Z"))
                 .andExpect(jsonPath("$.incident.reportedAt").value("2026-09-11T03:30:00Z"))
+                .andExpect(jsonPath("$.incident.incidentType").value("COLLISION"))
                 .andExpect(jsonPath("$.incident.permittedLocationPrecision").value("CITY"))
-                .andExpect(jsonPath("$.financial.initialEstimateAmount").value(45000))
+                .andExpect(jsonPath("$.financial.initialEstimateAmount").value(45000.50))
                 .andExpect(jsonPath("$.financial.currency").value("INR"))
                 .andExpect(jsonPath("$.financial.deductible").value(1000))
+                .andExpect(content().string(containsString("\"deductible\":1000.00")))
                 .andExpect(jsonPath("$.organizationId").doesNotExist())
                 .andExpect(jsonPath("$.isActive").doesNotExist())
                 .andExpect(jsonPath("$.version").doesNotExist())
@@ -113,13 +120,17 @@ class ClaimCreationApiTests {
         assertThat(((Timestamp) row.get("policy_start_date")).toInstant()).isEqualTo(Instant.parse("2025-12-31T18:30:00Z"));
         assertThat(row.get("claimant_token")).isEqualTo("CLT-TOKEN-1001");
         assertThat(row.get("garage_id")).isEqualTo("GARAGE-DEMO-10");
+        assertThat(row.get("vehicle_token")).isEqualTo("VEH-TOKEN-1001");
+        assertThat(row.get("vehicle_make")).isEqualTo("DEMO_MAKE");
+        assertThat(row.get("vehicle_model")).isEqualTo("DEMO_MODEL");
+        assertThat(row.get("incident_type")).isEqualTo("COLLISION");
         assertThat(((Timestamp) row.get("incident_at")).toInstant()).isEqualTo(Instant.parse("2026-09-10T05:00:00Z"));
         assertThat(((Timestamp) row.get("reported_at")).toInstant()).isEqualTo(Instant.parse("2026-09-11T03:30:00Z"));
         assertThat(row.get("permitted_location_precision")).isEqualTo("CITY");
-        assertThat(row.get("initial_estimate_amount")).isEqualTo(45000L);
+        assertThat((BigDecimal) row.get("initial_estimate_amount")).isEqualByComparingTo("45000.50");
         assertThat(row.get("approved_estimate_amount")).isNull();
         assertThat(row.get("currency")).isEqualTo("INR");
-        assertThat(row.get("deductible")).isEqualTo(1000L);
+        assertThat((BigDecimal) row.get("deductible")).isEqualByComparingTo("1000.00");
         assertThat(row.get("workflow_created_by")).isEqualTo(user.userId().toString());
         assertThat(row.get("workflow_created_at")).isNotNull();
     }
@@ -160,6 +171,57 @@ class ClaimCreationApiTests {
     }
 
     @Test
+    void vehicleTokenWhitespaceIsStrippedBeforeStoring() throws Exception {
+        TestUser user = newUser();
+        String internalId = ClaimPayloads.uniqueInternalId();
+        String body = ClaimPayloads.replace(ClaimPayloads.valid(internalId), "\"vehicleToken\": \"VEH-TOKEN-1001\"", "\"vehicleToken\": \"  VEH-TOKEN-1001 \"");
+
+        create(user, body)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.vehicle.vehicleToken").value("VEH-TOKEN-1001"));
+        assertThat(jdbcTemplate.queryForObject("select vehicle_token from claims where organization_id = ? and internal_id = ?",
+                String.class, user.organizationId(), internalId)).isEqualTo("VEH-TOKEN-1001");
+    }
+
+    @Test
+    void decimalAmountsAreStoredExactlyWithoutFloatingPointDrift() throws Exception {
+        TestUser user = newUser();
+        String internalId = ClaimPayloads.uniqueInternalId();
+        String body = ClaimPayloads.replace(
+                ClaimPayloads.replace(ClaimPayloads.valid(internalId), "\"initialEstimateAmount\": 45000.50", "\"initialEstimateAmount\": 0.10"),
+                "\"deductible\": 1000", "\"deductible\": 9999999999999.99");
+
+        create(user, body)
+                .andExpect(status().isCreated())
+                .andExpect(content().string(containsString("\"initialEstimateAmount\":0.10")))
+                .andExpect(content().string(containsString("\"deductible\":9999999999999.99")));
+
+        Map<String, Object> row = jdbcTemplate.queryForMap(
+                "select initial_estimate_amount, deductible from claims where organization_id = ? and internal_id = ?",
+                user.organizationId(), internalId);
+        assertThat(((BigDecimal) row.get("initial_estimate_amount")).toPlainString()).isEqualTo("0.10");
+        assertThat(((BigDecimal) row.get("deductible")).toPlainString()).isEqualTo("9999999999999.99");
+    }
+
+    @Test
+    void trailingZerosBeyondTwoDecimalsAreAcceptedButARealThirdDecimalIsNot() throws Exception {
+        TestUser user = newUser();
+        String internalId = ClaimPayloads.uniqueInternalId();
+        String trailingZero = ClaimPayloads.replace(ClaimPayloads.valid(internalId), "\"initialEstimateAmount\": 45000.50", "\"initialEstimateAmount\": 45000.500");
+
+        create(user, trailingZero)
+                .andExpect(status().isCreated())
+                .andExpect(content().string(containsString("\"initialEstimateAmount\":45000.50")));
+        assertThat((BigDecimal) jdbcTemplate.queryForObject("select initial_estimate_amount from claims where organization_id = ? and internal_id = ?",
+                BigDecimal.class, user.organizationId(), internalId)).isEqualByComparingTo("45000.50");
+
+        String realThirdDecimal = ClaimPayloads.replace(ClaimPayloads.valid(), "\"initialEstimateAmount\": 45000.50", "\"initialEstimateAmount\": 45000.505");
+        create(user, realThirdDecimal)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[*].field", hasItem("financial.initialEstimateAmount")));
+    }
+
+    @Test
     void unauthenticatedRequestIsRejectedAndCreatesNothing() throws Exception {
         TestUser user = newUser();
         String internalId = ClaimPayloads.uniqueInternalId();
@@ -182,6 +244,11 @@ class ClaimCreationApiTests {
                 Arguments.of("null garage", nullBlock(base, "garage"), "garage"),
                 Arguments.of("null incident", nullBlock(base, "incident"), "incident"),
                 Arguments.of("null financial", nullBlock(base, "financial"), "financial"),
+                Arguments.of("null vehicle", nullBlock(base, "vehicle"), "vehicle"),
+                Arguments.of("blank vehicleToken", ClaimPayloads.replace(base, "\"vehicleToken\": \"VEH-TOKEN-1001\"", "\"vehicleToken\": \" \""), "vehicle.vehicleToken"),
+                Arguments.of("missing incidentType", ClaimPayloads.replace(base, "\"incidentType\": \"COLLISION\",", ""), "incident.incidentType"),
+                Arguments.of("three-decimal amount", ClaimPayloads.replace(base, "\"initialEstimateAmount\": 45000.50", "\"initialEstimateAmount\": 45000.505"), "financial.initialEstimateAmount"),
+                Arguments.of("amount over 13 whole digits", ClaimPayloads.replace(base, "\"deductible\": 1000", "\"deductible\": 10000000000000"), "financial.deductible"),
                 Arguments.of("blank policyToken", ClaimPayloads.replace(base, "\"policyToken\": \"POL-TOKEN-1001\"", "\"policyToken\": \" \""), "policy.policyToken"),
                 Arguments.of("blank garageId", ClaimPayloads.replace(base, "\"garageId\": \"GARAGE-DEMO-10\"", "\"garageId\": \"\""), "garage.garageId"),
                 Arguments.of("null incidentAt", ClaimPayloads.replace(base, "\"incidentAt\": \"2026-09-10T10:30:00+05:30\"", "\"incidentAt\": null"), "incident.incidentAt"),
@@ -239,6 +306,8 @@ class ClaimCreationApiTests {
                 Arguments.of("unknown stage", ClaimPayloads.replace(base, "FINAL_INVOICE_RECEIVED", "NOT_A_STAGE")),
                 Arguments.of("unparseable date", ClaimPayloads.replace(base, "2026-09-10T10:30:00+05:30", "not-a-date")),
                 Arguments.of("non-numeric version", ClaimPayloads.replace(base, "\"claimVersion\": 1", "\"claimVersion\": \"abc\"")),
+                Arguments.of("unknown incident type", ClaimPayloads.replace(base, "\"incidentType\": \"COLLISION\"", "\"incidentType\": \"NOT_A_TYPE\"")),
+                Arguments.of("non-numeric amount", ClaimPayloads.replace(base, "\"initialEstimateAmount\": 45000.50", "\"initialEstimateAmount\": \"abc\"")),
                 Arguments.of("empty body", "")
         );
     }
