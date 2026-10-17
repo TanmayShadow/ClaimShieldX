@@ -55,4 +55,24 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
     @Modifying
     @Query("update Document d set d.superseded = true, d.version = d.version + 1 where d.id = :id and d.superseded = false")
     int markSuperseded(@Param("id") UUID id);
+
+    /**
+     * Claims the document for extraction: only from a state that may be extracted, or from PROCESSING when that has gone on
+     * for so long that the earlier run must have died. Zero rows updated means someone else holds it or it may not be
+     * extracted (already VERIFIED).
+     */
+    @Modifying
+    @Query("""
+            update Document d set d.status = :processing, d.updatedAt = :now, d.version = d.version + 1
+            where d.id = :id and d.organizationId = :organizationId
+              and (d.status in :startable or (d.status = :processing and d.updatedAt < :staleBefore))
+            """)
+    int markProcessing(@Param("id") UUID id, @Param("organizationId") UUID organizationId,
+                       @Param("processing") DocumentStatus processing, @Param("startable") Collection<DocumentStatus> startable,
+                       @Param("now") Instant now, @Param("staleBefore") Instant staleBefore);
+
+    /** Moves a document out of PROCESSING. Zero rows updated means it was no longer PROCESSING. */
+    @Modifying
+    @Query("update Document d set d.status = :to, d.updatedAt = :now, d.version = d.version + 1 where d.id = :id and d.status = :from")
+    int transition(@Param("id") UUID id, @Param("from") DocumentStatus from, @Param("to") DocumentStatus to, @Param("now") Instant now);
 }

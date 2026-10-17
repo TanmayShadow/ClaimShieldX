@@ -207,6 +207,11 @@ public class GlobalExceptionHandler {
         return respond(HttpStatus.CONFLICT, "REQUEST_IN_PROGRESS", "A request with this Idempotency-Key is still being processed");
     }
 
+    @ExceptionHandler(ExtractionNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleExtractionNotSupported(ExtractionNotSupportedException e){
+        return respond(HttpStatus.UNPROCESSABLE_ENTITY, "EXTRACTION_NOT_SUPPORTED", "Extraction is not available for this document type");
+    }
+
     @ExceptionHandler(StorageUnavailableException.class)
     public ResponseEntity<ErrorResponse> handleStorageUnavailable(StorageUnavailableException e){
         log.error("Document storage failure", e);
