@@ -82,6 +82,9 @@ class MigrationTests {
                 // 3 stages x 13 document types, plus 6 theft overrides.
                 assertThat(scalar(connection, "select count(*) from document_requirements")).isEqualTo("45");
                 assertThat(scalar(connection, "select data_type from information_schema.columns where table_name = 'document_extractions' and column_name = 'result'")).isEqualTo("jsonb");
+                assertThat(scalar(connection, "select count(*) from information_schema.tables where table_schema = 'public' and table_name in "
+                        + "('historical_imports', 'historical_import_rows', 'historical_claims', 'garage_history_records')")).isEqualTo("4");
+                assertThat(scalar(connection, "select count(*) from pg_constraint where conname in ('uq_historical_claims_source', 'uq_historical_claims_version', 'uq_garage_history_source')")).isEqualTo("3");
             }
         });
     }

@@ -1,5 +1,6 @@
 package com.example.ClaimShieldX.extraction.normalize;
 
+import com.example.ClaimShieldX.common.utils.TextCleaner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
