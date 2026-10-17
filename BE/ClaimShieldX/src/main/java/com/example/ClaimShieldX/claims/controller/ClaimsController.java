@@ -1,17 +1,27 @@
 package com.example.ClaimShieldX.claims.controller;
 
+import com.example.ClaimShieldX.auth.model.UserPrincipal;
+import com.example.ClaimShieldX.claims.dto.ClaimCreationRequest;
+import com.example.ClaimShieldX.claims.dto.ClaimResponse;
+import com.example.ClaimShieldX.claims.service.ClaimsService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/claims")
 public class ClaimsController {
+    private final ClaimsService claimsService;
 
-    @GetMapping
-    public ResponseEntity<?> getClaims(){
-        return new ResponseEntity<>("Working", HttpStatus.OK);
+    public ClaimsController(ClaimsService claimsService){
+        this.claimsService = claimsService;
+    }
+
+    @PostMapping()
+    public ResponseEntity<ClaimResponse> createClaim(@Valid @RequestBody ClaimCreationRequest claimCreationRequest, @AuthenticationPrincipal UserPrincipal userPrincipal){
+        ClaimResponse claim = claimsService.createClaim(claimCreationRequest,userPrincipal);
+        return new ResponseEntity<>(claim, HttpStatus.CREATED);
     }
 }
