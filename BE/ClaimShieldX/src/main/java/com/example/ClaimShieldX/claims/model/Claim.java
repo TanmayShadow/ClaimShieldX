@@ -47,6 +47,9 @@ public class Claim extends BaseEntity {
     private Garage garage;
 
     @Embedded
+    private Vehicle vehicle;
+
+    @Embedded
     private Incident incident;
 
     @Embedded

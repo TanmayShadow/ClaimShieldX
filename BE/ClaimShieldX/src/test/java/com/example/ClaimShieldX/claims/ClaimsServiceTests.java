@@ -1,10 +1,12 @@
 package com.example.ClaimShieldX.claims;
 
 import com.example.ClaimShieldX.auth.model.UserPrincipal;
+import com.example.ClaimShieldX.auth.model.UserRole;
 import com.example.ClaimShieldX.claims.dto.*;
 import com.example.ClaimShieldX.claims.mapper.ClaimMapper;
 import com.example.ClaimShieldX.claims.model.Claim;
 import com.example.ClaimShieldX.claims.model.ClaimStage;
+import com.example.ClaimShieldX.claims.model.IncidentType;
 import com.example.ClaimShieldX.claims.repository.ClaimsRepository;
 import com.example.ClaimShieldX.claims.service.ClaimsService;
 import com.example.ClaimShieldX.exceptions.DuplicateClaimException;
@@ -36,13 +38,14 @@ class ClaimsServiceTests {
         service = new ClaimsService(repository, new ClaimMapper());
         Organization organization = new Organization();
         organization.setId(organizationId);
-        principal = new UserPrincipal(UUID.randomUUID(), "user@test.local", "x", organization);
+        principal = new UserPrincipal(UUID.randomUUID(), "user@test.local", "x", organization, UserRole.INVESTIGATOR);
     }
 
     private ClaimCreationRequest request(String internalId) {
         return new ClaimCreationRequest(internalId, 1L, ClaimStage.FNOL,
                 new PolicyDto("POL-1", null, null, null), null, new GarageDto("G-1"),
-                new IncidentDto(Instant.parse("2026-09-10T05:00:00Z"), null, null),
+                new VehicleDto("VEH-1", null, null),
+                new IncidentDto(Instant.parse("2026-09-10T05:00:00Z"), null, IncidentType.COLLISION, null),
                 new FinancialDto(null, null, "INR", null));
     }
 

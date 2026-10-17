@@ -1,0 +1,126 @@
+package com.example.ClaimShieldX.db;
+
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+/**
+ * Runs the real migrations against brand-new throwaway databases, so a fresh install and an upgrade of an
+ * existing database are both proven on every build. Needs the same server and credentials as the other tests.
+ */
+@SpringBootTest
+@ActiveProfiles("test")
+class MigrationTests {
+    @Autowired private Environment environment;
+
+    private interface Body {
+        void run(String url, String user, String password) throws Exception;
+    }
+
+    private void withTempDatabase(Body body) throws Exception {
+        String url = environment.getRequiredProperty("spring.datasource.url");
+        String user = environment.getRequiredProperty("spring.datasource.username");
+        String password = environment.getRequiredProperty("spring.datasource.password");
+        String serverUrl = url.substring(0, url.lastIndexOf('/'));
+        String name = "claimshieldx_mig_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+
+        try (Connection admin = DriverManager.getConnection(serverUrl + "/postgres", user, password);
+             Statement statement = admin.createStatement()) {
+            statement.execute("CREATE DATABASE " + name);
+        }
+        try {
+            body.run(serverUrl + "/" + name, user, password);
+        } finally {
+            try (Connection admin = DriverManager.getConnection(serverUrl + "/postgres", user, password);
+                 Statement statement = admin.createStatement()) {
+                statement.execute("DROP DATABASE IF EXISTS " + name + " WITH (FORCE)");
+            }
+        }
+    }
+
+    private Flyway flyway(String url, String user, String password, String target) {
+        return Flyway.configure()
+                .dataSource(url, user, password)
+                .locations("classpath:db/migration")
+                .cleanDisabled(true)
+                .target(target)
+                .load();
+    }
+
+    private String scalar(Connection connection, String sql) throws SQLException {
+        try (Statement statement = connection.createStatement(); ResultSet rs = statement.executeQuery(sql)) {
+            return rs.next() ? rs.getString(1) : null;
+        }
+    }
+
+    @Test
+    void aFreshDatabaseMigratesToTheLatestVersion() throws Exception {
+        withTempDatabase((url, user, password) -> {
+            Flyway flyway = flyway(url, user, password, "latest");
+            flyway.migrate();
+
+            assertThat(flyway.info().pending()).isEmpty();
+            try (Connection connection = DriverManager.getConnection(url, user, password)) {
+                assertThat(scalar(connection, "select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('documents', 'idempotency_keys')")).isEqualTo("2");
+                assertThat(scalar(connection, "select numeric_precision || ',' || numeric_scale from information_schema.columns where table_name = 'claims' and column_name = 'initial_estimate_amount'")).isEqualTo("15,2");
+                assertThat(scalar(connection, "select count(*) from information_schema.columns where table_name = 'claims' and column_name in ('vehicle_token', 'vehicle_make', 'vehicle_model', 'incident_type')")).isEqualTo("4");
+                assertThat(scalar(connection, "select column_default from information_schema.columns where table_name = 'users' and column_name = 'role'")).contains("INVESTIGATOR");
+            }
+        });
+    }
+
+    @Test
+    void anExistingDatabaseWithoutClaimsUpgradesAndKeepsItsUsers() throws Exception {
+        withTempDatabase((url, user, password) -> {
+            flyway(url, user, password, "4").migrate();
+            try (Connection connection = DriverManager.getConnection(url, user, password); Statement statement = connection.createStatement()) {
+                statement.execute("insert into organization(id, name, status, created_at, updated_at) values ('11111111-1111-1111-1111-111111111111', 'Org', 'ACTIVE', now(), now())");
+                statement.execute("insert into users(id, email, password, organization_id) values ('22222222-2222-2222-2222-222222222222', 'old@test.local', 'x', '11111111-1111-1111-1111-111111111111')");
+            }
+
+            Flyway flyway = flyway(url, user, password, "latest");
+            flyway.migrate();
+
+            assertThat(flyway.info().pending()).isEmpty();
+            try (Connection connection = DriverManager.getConnection(url, user, password)) {
+                assertThat(scalar(connection, "select role from users where email = 'old@test.local'")).isEqualTo("INVESTIGATOR");
+                assertThat(scalar(connection, "select count(*) from pg_constraint where conname = 'uq_claims_org_internal_id'")).isEqualTo("1");
+            }
+        });
+    }
+
+    @Test
+    void anExistingClaimWithoutAVehicleTokenBlocksTheUpgradeAndLeavesTheDatabaseUntouched() throws Exception {
+        withTempDatabase((url, user, password) -> {
+            flyway(url, user, password, "5").migrate();
+            try (Connection connection = DriverManager.getConnection(url, user, password); Statement statement = connection.createStatement()) {
+                statement.execute("insert into organization(id, name, status, created_at, updated_at) values ('11111111-1111-1111-1111-111111111111', 'Org', 'ACTIVE', now(), now())");
+                statement.execute("insert into claims(id, organization_id, internal_id) values ('33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'OLD-1')");
+            }
+
+            Flyway flyway = flyway(url, user, password, "latest");
+            assertThatThrownBy(flyway::migrate).isInstanceOf(FlywayException.class);
+
+            try (Connection connection = DriverManager.getConnection(url, user, password)) {
+                assertThat(scalar(connection, "select max(version::int) from flyway_schema_history where success")).isEqualTo("5");
+                assertThat(scalar(connection, "select count(*) from information_schema.columns where table_name = 'claims' and column_name = 'vehicle_token'")).isEqualTo("0");
+                assertThat(scalar(connection, "select data_type from information_schema.columns where table_name = 'claims' and column_name = 'initial_estimate_amount'")).isEqualTo("bigint");
+                assertThat(scalar(connection, "select count(*) from claims")).isEqualTo("1");
+            }
+        });
+    }
+}

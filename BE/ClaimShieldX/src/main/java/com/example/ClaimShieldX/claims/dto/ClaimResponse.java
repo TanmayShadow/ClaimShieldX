@@ -13,6 +13,7 @@ public record ClaimResponse(
         PolicyDto policy,
         ClaimantDto claimant,
         GarageDto garage,
+        VehicleDto vehicle,
         IncidentDto incident,
         FinancialDto financial,
         Instant createdAt,

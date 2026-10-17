@@ -4,6 +4,7 @@ import com.example.ClaimShieldX.organization.Organization;
 import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
@@ -16,18 +17,20 @@ public class UserPrincipal implements UserDetails {
     private final String email;
     private final String password;
     private final Organization organization;
+    private final UserRole role;
 
-    public UserPrincipal(UUID id, String email, String password, Organization organization){
+    public UserPrincipal(UUID id, String email, String password, Organization organization, UserRole role){
         this.id = id;
         this.email = email;
         this.password = password;
         this.organization = organization;
+        this.role = role;
     }
 
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
