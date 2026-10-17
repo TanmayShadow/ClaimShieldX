@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
     private final OrganizationService organizationService;
