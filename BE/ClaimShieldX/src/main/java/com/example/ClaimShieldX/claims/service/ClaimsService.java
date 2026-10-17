@@ -6,11 +6,14 @@ import com.example.ClaimShieldX.claims.dto.ClaimResponse;
 import com.example.ClaimShieldX.claims.mapper.ClaimMapper;
 import com.example.ClaimShieldX.claims.model.Claim;
 import com.example.ClaimShieldX.claims.repository.ClaimsRepository;
+import com.example.ClaimShieldX.common.utils.ConstraintViolations;
 import com.example.ClaimShieldX.exceptions.DuplicateClaimException;
-import org.hibernate.exception.ConstraintViolationException;
+import com.example.ClaimShieldX.exceptions.ResourceNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 
 @Service
@@ -35,20 +38,17 @@ public class ClaimsService {
             return claimMapper.toResponse(claimsRepository.saveAndFlush(claim));
         } catch (DataIntegrityViolationException e) {
             // The exists-check above can lose a race; the unique constraint is the real guard.
-            if(violatesInternalIdUniqueness(e)){
+            if(ConstraintViolations.isViolationOf(e, ORG_INTERNAL_ID_CONSTRAINT)){
                 throw new DuplicateClaimException("Duplicate Claim found for same internal_id.");
             }
             throw e;
         }
     }
 
-    private boolean violatesInternalIdUniqueness(Throwable e){
-        for(Throwable cause = e; cause != null; cause = cause.getCause()){
-            if(cause instanceof ConstraintViolationException violation
-                    && ORG_INTERNAL_ID_CONSTRAINT.equals(violation.getConstraintName())){
-                return true;
-            }
-        }
-        return false;
+    @Transactional(readOnly = true)
+    public ClaimResponse getClaim(UUID claimId, UserPrincipal userPrincipal){
+        return claimsRepository.findByIdAndOrganizationId(claimId, userPrincipal.getOrganization().getId())
+                .map(claimMapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Claim not found"));
     }
 }

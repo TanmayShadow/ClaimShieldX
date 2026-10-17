@@ -28,10 +28,18 @@ public class DbFixtures {
     }
 
     public UUID user(UUID organizationId) {
+        return user(organizationId, "INVESTIGATOR");
+    }
+
+    public UUID user(UUID organizationId, String role) {
         UUID id = UUID.randomUUID();
-        jdbc.update("insert into users(id, email, password, organization_id) values (?, ?, 'not-used', ?)",
-                id, id + "@test.local", organizationId);
+        jdbc.update("insert into users(id, email, password, organization_id, role) values (?, ?, 'not-used', ?, ?)",
+                id, id + "@test.local", organizationId, role);
         return id;
+    }
+
+    public List<UUID> organizations() {
+        return List.copyOf(organizations);
     }
 
     public UUID claim(UUID organizationId, String internalId) {

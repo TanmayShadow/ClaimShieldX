@@ -45,7 +45,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public User getUserFromId(UUID id){
-        return userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return userRepository.findWithOrganizationById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     public String registerUser(@Valid RegisterUserRequest registerUserRequest) {

@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -43,6 +45,41 @@ class GlobalExceptionHandlerTests {
         assertBody(handler.handleAuthenticationException(new InsufficientAuthenticationException("x")), HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED");
         assertBody(handler.handleAccessDenied(new AccessDeniedException("x")), HttpStatus.FORBIDDEN, "FORBIDDEN");
         assertBody(handler.handleDuplicateClaimException(new DuplicateClaimException("x")), HttpStatus.CONFLICT, "DUPLICATE_CLAIM");
+    }
+
+    @Test
+    void uploadAndIdempotencyHandlersAnswerWithTheContractedStatusAndCode() {
+        assertBody(handler.handleResourceNotFound(new ResourceNotFoundException("x")), HttpStatus.NOT_FOUND, "NOT_FOUND");
+        assertBody(handler.handleEmptyFile(new EmptyFileException()), HttpStatus.BAD_REQUEST, "EMPTY_FILE");
+        assertBody(handler.handleUnsupportedFileType(new UnsupportedFileTypeException()), HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE");
+        assertBody(handler.handleDocumentLimit(new DocumentLimitReachedException()), HttpStatus.CONFLICT, "DOCUMENT_LIMIT_REACHED");
+        assertBody(handler.handleInvalidStateTransition(new InvalidStateTransitionException("x")), HttpStatus.CONFLICT, "INVALID_STATE_TRANSITION");
+        assertBody(handler.handleIdempotencyKeyReused(new IdempotencyKeyReusedException()), HttpStatus.UNPROCESSABLE_ENTITY, "IDEMPOTENCY_KEY_REUSED");
+        assertBody(handler.handleRequestInProgress(new RequestInProgressException()), HttpStatus.CONFLICT, "REQUEST_IN_PROGRESS");
+        assertBody(handler.handleUploadTooLarge(new MaxUploadSizeExceededException(1024)), HttpStatus.PAYLOAD_TOO_LARGE, "PAYLOAD_TOO_LARGE");
+        assertBody(handler.handleMultipartProblem(new MultipartException("broken")), HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST");
+    }
+
+    @Test
+    void aDuplicateDocumentNamesTheExistingOneAndAValidationErrorListsItsFields() {
+        java.util.UUID existing = java.util.UUID.randomUUID();
+
+        ResponseEntity<ErrorResponse> duplicate = handler.handleDuplicateDocument(new DuplicateDocumentException(existing));
+        assertBody(duplicate, HttpStatus.CONFLICT, "DUPLICATE_DOCUMENT");
+        assertThat(duplicate.getBody().getDetails()).containsEntry("existingDocumentId", existing.toString());
+
+        ResponseEntity<ErrorResponse> invalid = handler.handleRequestValidation(RequestValidationException.of("file", "could not be read"));
+        assertBody(invalid, HttpStatus.BAD_REQUEST, "VALIDATION_FAILED");
+        assertThat(invalid.getBody().getErrors()).extracting(ErrorResponse.FieldIssue::field).containsExactly("file");
+    }
+
+    @Test
+    void aStorageFailureIsA503ThatNeverRevealsTheCause() {
+        ResponseEntity<ErrorResponse> response = handler.handleStorageUnavailable(
+                new StorageUnavailableException("cannot write /var/secret/claim-docs", new java.io.IOException("permission denied")));
+
+        assertBody(response, HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE");
+        assertThat(response.getBody().getMessage()).doesNotContain("secret").doesNotContain("permission");
     }
 
     @Test

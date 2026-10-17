@@ -11,11 +11,18 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Every response carries a stable {@code code}; clients branch on it, never on the message. Messages are
@@ -26,6 +33,14 @@ import java.util.List;
 public class GlobalExceptionHandler {
     private ResponseEntity<ErrorResponse> respond(HttpStatus status, String code, String message){
         return new ResponseEntity<ErrorResponse>(new ErrorResponse(status, code, message), status);
+    }
+
+    private ResponseEntity<ErrorResponse> fieldError(String field, String message){
+        return new ResponseEntity<ErrorResponse>(
+                new ErrorResponse(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Request validation failed",
+                        List.of(new ErrorResponse.FieldIssue(field, message))),
+                HttpStatus.BAD_REQUEST
+        );
     }
 
     @ExceptionHandler(EmailAlreadyExistException.class)
@@ -104,6 +119,98 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException e){
         return respond(HttpStatus.NOT_FOUND, "NOT_FOUND", "The requested resource was not found");
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException e){
+        return respond(HttpStatus.NOT_FOUND, "NOT_FOUND", "The requested resource was not found");
+    }
+
+    @ExceptionHandler(RequestValidationException.class)
+    public ResponseEntity<ErrorResponse> handleRequestValidation(RequestValidationException e){
+        return new ResponseEntity<ErrorResponse>(
+                new ErrorResponse(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Request validation failed", e.getIssues()),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingHeader(MissingRequestHeaderException e){
+        if("Idempotency-Key".equalsIgnoreCase(e.getHeaderName())){
+            return respond(HttpStatus.BAD_REQUEST, "IDEMPOTENCY_KEY_REQUIRED", "The Idempotency-Key header is required for this request");
+        }
+        return fieldError(e.getHeaderName(), "is required");
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ErrorResponse> handleMissingPart(MissingServletRequestPartException e){
+        return fieldError(e.getRequestPartName(), "is required");
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParameter(MissingServletRequestParameterException e){
+        return fieldError(e.getParameterName(), "is required");
+    }
+
+    // The rejected value is never echoed back.
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e){
+        return fieldError(e.getName(), "has an invalid value");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleUploadTooLarge(MaxUploadSizeExceededException e){
+        return respond(HttpStatus.PAYLOAD_TOO_LARGE, "PAYLOAD_TOO_LARGE", "The uploaded file is larger than the allowed size");
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ErrorResponse> handleMultipartProblem(MultipartException e){
+        return respond(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST", "The multipart request could not be read");
+    }
+
+    @ExceptionHandler(EmptyFileException.class)
+    public ResponseEntity<ErrorResponse> handleEmptyFile(EmptyFileException e){
+        return respond(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "The uploaded file is empty");
+    }
+
+    @ExceptionHandler(UnsupportedFileTypeException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedFileType(UnsupportedFileTypeException e){
+        return respond(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE", "Only PDF, JPEG and PNG files are accepted");
+    }
+
+    @ExceptionHandler(DuplicateDocumentException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateDocument(DuplicateDocumentException e){
+        return new ResponseEntity<ErrorResponse>(
+                new ErrorResponse(HttpStatus.CONFLICT, "DUPLICATE_DOCUMENT", "The same file is already stored for this claim and document type",
+                        null, Map.of("existingDocumentId", e.getExistingDocumentId().toString())),
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(DocumentLimitReachedException.class)
+    public ResponseEntity<ErrorResponse> handleDocumentLimit(DocumentLimitReachedException e){
+        return respond(HttpStatus.CONFLICT, "DOCUMENT_LIMIT_REACHED", "This claim has reached the maximum number of documents");
+    }
+
+    @ExceptionHandler(InvalidStateTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStateTransition(InvalidStateTransitionException e){
+        return respond(HttpStatus.CONFLICT, "INVALID_STATE_TRANSITION", "The requested change is not allowed in the current state");
+    }
+
+    @ExceptionHandler(IdempotencyKeyReusedException.class)
+    public ResponseEntity<ErrorResponse> handleIdempotencyKeyReused(IdempotencyKeyReusedException e){
+        return respond(HttpStatus.UNPROCESSABLE_ENTITY, "IDEMPOTENCY_KEY_REUSED", "This Idempotency-Key was already used with a different request");
+    }
+
+    @ExceptionHandler(RequestInProgressException.class)
+    public ResponseEntity<ErrorResponse> handleRequestInProgress(RequestInProgressException e){
+        return respond(HttpStatus.CONFLICT, "REQUEST_IN_PROGRESS", "A request with this Idempotency-Key is still being processed");
+    }
+
+    @ExceptionHandler(StorageUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleStorageUnavailable(StorageUnavailableException e){
+        log.error("Document storage failure", e);
+        return respond(HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", "The file store is temporarily unavailable. Please try again.");
     }
 
     @ExceptionHandler(Exception.class)
