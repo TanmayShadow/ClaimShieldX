@@ -5,7 +5,7 @@ import com.example.ClaimShieldX.auth.model.User;
 import com.example.ClaimShieldX.auth.model.UserPrincipal;
 import com.example.ClaimShieldX.auth.repository.UserRepository;
 import com.example.ClaimShieldX.exceptions.EmailAlreadyExistException;
-import com.example.ClaimShieldX.exceptions.OrganizationNameAlreadyExistException;
+import com.example.ClaimShieldX.exceptions.OrganizationNotFoundException;
 import com.example.ClaimShieldX.organization.Organization;
 import com.example.ClaimShieldX.organization.OrganizationService;
 import jakarta.validation.Valid;
@@ -45,7 +45,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public User getUserFromId(UUID id){
-        return userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return userRepository.findWithOrganizationById(id).orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     public String registerUser(@Valid RegisterUserRequest registerUserRequest) {
@@ -54,7 +54,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new EmailAlreadyExistException("Email id is already registered");
         Organization organization = organizationService.findByName(registerUserRequest.organizationName());
         if(organization == null)
-                throw new OrganizationNameAlreadyExistException("Organization not found");
+                throw new OrganizationNotFoundException("Organization not found");
         user = new User();
         user.setEmail(registerUserRequest.email());
         user.setOrganization(organization);

@@ -3,6 +3,8 @@ package com.example.ClaimShieldX.support;
 import com.example.ClaimShieldX.documents.model.DocumentType;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,19 +30,44 @@ public class DbFixtures {
     }
 
     public UUID user(UUID organizationId) {
+        return user(organizationId, "INVESTIGATOR");
+    }
+
+    public UUID user(UUID organizationId, String role) {
         UUID id = UUID.randomUUID();
-        jdbc.update("insert into users(id, email, password, organization_id) values (?, ?, 'not-used', ?)",
-                id, id + "@test.local", organizationId);
+        jdbc.update("insert into users(id, email, password, organization_id, role) values (?, ?, 'not-used', ?, ?)",
+                id, id + "@test.local", organizationId, role);
         return id;
     }
 
+    public List<UUID> organizations() {
+        return List.copyOf(organizations);
+    }
+
     public UUID claim(UUID organizationId, String internalId) {
+        return claim(organizationId, internalId, "FINAL_INVOICE_RECEIVED", "COLLISION");
+    }
+
+    public UUID claim(UUID organizationId, String internalId, String stage, String incidentType) {
         UUID id = UUID.randomUUID();
         jdbc.update("""
                 insert into claims(id, organization_id, internal_id, current_stage, policy_token, garage_id,
                                    vehicle_token, incident_type, incident_at, currency)
-                values (?, ?, ?, 'FINAL_INVOICE_RECEIVED', 'POL-1', 'G-1', 'VEH-1', 'COLLISION', now(), 'INR')
-                """, id, organizationId, internalId);
+                values (?, ?, ?, ?, 'POL-1', 'G-1', 'VEH-1', ?, now(), 'INR')
+                """, id, organizationId, internalId, stage, incidentType);
+        return id;
+    }
+
+    /** Like {@link #document}, but with a chosen processing status, arrival time and superseded flag. */
+    public UUID document(UUID organizationId, UUID claimId, UUID uploadedBy, DocumentType type, String status,
+                         Instant receivedAt, boolean superseded) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("""
+                insert into documents(id, organization_id, claim_id, document_type, file_name, content_type,
+                                      size_bytes, sha256, object_key, uploaded_by, status, received_at, superseded)
+                values (?, ?, ?, ?, 'file.pdf', 'application/pdf', 1024, ?, ?, ?, ?, ?, ?)
+                """, id, organizationId, claimId, type.name(), sha256(), "obj/" + id, uploadedBy, status,
+                Timestamp.from(receivedAt), superseded);
         return id;
     }
 

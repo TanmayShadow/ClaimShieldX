@@ -7,7 +7,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -65,39 +64,12 @@ public class TokenService {
                 .compact();
     }
 
-    public Object getClaim(String token, String claimName){
-        var key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-        Claims claims = Jwts.parser()
-                .verifyWith(key)
+    /** Verifies signature and expiry. Throws ExpiredJwtException for an expired token and another JwtException for any other bad token. */
+    public Claims parseClaims(String token){
+        return Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return claims.get(claimName);
-    }
-
-    public String extractSubject(String token){
-        var key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
-    }
-
-    public boolean isTokenExpired(String token){
-        var key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-        Date expirationDate = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getExpiration();
-        return expirationDate.before(new Date());
-    }
-
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractSubject(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 }
