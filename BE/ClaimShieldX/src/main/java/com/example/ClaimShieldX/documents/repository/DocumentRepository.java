@@ -1,6 +1,7 @@
 package com.example.ClaimShieldX.documents.repository;
 
 import com.example.ClaimShieldX.documents.model.Document;
+import com.example.ClaimShieldX.documents.model.DocumentStatus;
 import com.example.ClaimShieldX.documents.model.DocumentType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,6 +29,27 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
     Optional<Document> findByClaimIdAndDocumentTypeAndSha256AndSupersededFalse(UUID claimId, DocumentType documentType, String sha256);
 
     long countByClaimId(UUID claimId);
+
+    /** What the checklist needs from a document, without loading storage keys or file names. */
+    interface EvidenceRow {
+        UUID getId();
+
+        UUID getClaimId();
+
+        DocumentType getDocumentType();
+
+        DocumentStatus getStatus();
+
+        Instant getReceivedAt();
+    }
+
+    // One query for any number of claims, so a claim list does not query once per claim.
+    @Query("""
+            select d.id as id, d.claimId as claimId, d.documentType as documentType, d.status as status, d.receivedAt as receivedAt
+            from Document d
+            where d.organizationId = :organizationId and d.claimId in :claimIds and d.superseded = false
+            """)
+    List<EvidenceRow> findCurrentEvidence(@Param("organizationId") UUID organizationId, @Param("claimIds") Collection<UUID> claimIds);
 
     // Zero rows updated means it was already superseded (or does not exist).
     @Modifying

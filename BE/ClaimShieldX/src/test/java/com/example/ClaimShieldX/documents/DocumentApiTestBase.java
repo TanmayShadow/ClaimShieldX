@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-abstract class DocumentApiTestBase {
+public abstract class DocumentApiTestBase {
     @Autowired protected MockMvc mockMvc;
     @Autowired protected JdbcTemplate jdbc;
     @Autowired protected DocumentStorage storage;

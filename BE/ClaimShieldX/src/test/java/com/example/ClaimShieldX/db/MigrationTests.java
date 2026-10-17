@@ -79,6 +79,8 @@ class MigrationTests {
                 assertThat(scalar(connection, "select numeric_precision || ',' || numeric_scale from information_schema.columns where table_name = 'claims' and column_name = 'initial_estimate_amount'")).isEqualTo("15,2");
                 assertThat(scalar(connection, "select count(*) from information_schema.columns where table_name = 'claims' and column_name in ('vehicle_token', 'vehicle_make', 'vehicle_model', 'incident_type')")).isEqualTo("4");
                 assertThat(scalar(connection, "select column_default from information_schema.columns where table_name = 'users' and column_name = 'role'")).contains("INVESTIGATOR");
+                // 3 stages x 13 document types, plus 6 theft overrides.
+                assertThat(scalar(connection, "select count(*) from document_requirements")).isEqualTo("45");
             }
         });
     }
@@ -99,6 +101,7 @@ class MigrationTests {
             try (Connection connection = DriverManager.getConnection(url, user, password)) {
                 assertThat(scalar(connection, "select role from users where email = 'old@test.local'")).isEqualTo("INVESTIGATOR");
                 assertThat(scalar(connection, "select count(*) from pg_constraint where conname = 'uq_claims_org_internal_id'")).isEqualTo("1");
+                assertThat(scalar(connection, "select count(*) from document_requirements")).isEqualTo("45");
             }
         });
     }

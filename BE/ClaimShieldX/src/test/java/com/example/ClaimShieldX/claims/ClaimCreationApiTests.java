@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -367,7 +367,8 @@ class ClaimCreationApiTests {
 
     @Test
     void unsupportedMethodIsA405NotA500() throws Exception {
-        mockMvc.perform(get(URL).header("Authorization", "Bearer " + newUser().token()))
+        // GET is the claim list now, so a method the collection really does not offer is used.
+        mockMvc.perform(delete(URL).header("Authorization", "Bearer " + newUser().token()))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(jsonPath("$.status").value(405))
                 .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"));
