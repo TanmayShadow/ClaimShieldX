@@ -227,7 +227,8 @@ class ClaimCreationApiTests {
         String internalId = ClaimPayloads.uniqueInternalId();
 
         mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content(ClaimPayloads.valid(internalId)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
 
         assertThat(countClaims(user, internalId)).isZero();
     }
@@ -274,6 +275,7 @@ class ClaimCreationApiTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
                 .andExpect(jsonPath("$.message").value("Request validation failed"))
                 .andExpect(jsonPath("$.errors[*].field", hasItem(expectedField)));
 
@@ -319,6 +321,7 @@ class ClaimCreationApiTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"))
                 .andExpect(jsonPath("$.message", not(emptyOrNullString())))
                 .andExpect(jsonPath("$.timestamp", not(emptyOrNullString())));
     }
@@ -332,6 +335,7 @@ class ClaimCreationApiTests {
         create(user, ClaimPayloads.valid(internalId))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.code").value("DUPLICATE_CLAIM"))
                 .andExpect(jsonPath("$.message", not(emptyOrNullString())));
 
         assertThat(countClaims(user, internalId)).isEqualTo(1);
@@ -365,6 +369,7 @@ class ClaimCreationApiTests {
     void unsupportedMethodIsA405NotA500() throws Exception {
         mockMvc.perform(get(URL).header("Authorization", "Bearer " + newUser().token()))
                 .andExpect(status().isMethodNotAllowed())
-                .andExpect(jsonPath("$.status").value(405));
+                .andExpect(jsonPath("$.status").value(405))
+                .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"));
     }
 }
