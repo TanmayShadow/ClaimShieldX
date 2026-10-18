@@ -1,0 +1,24 @@
+.summary {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: var(--rule);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius-2);
+}
+
+.summary:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.title {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.list {
+  display: grid;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+}

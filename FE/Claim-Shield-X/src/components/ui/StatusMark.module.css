@@ -1,0 +1,76 @@
+.mark {
+  --tone: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--tone);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.mark svg {
+  flex: none;
+}
+
+.boxed {
+  padding: 0.2rem var(--space-2);
+  border: 1px solid var(--tone);
+  border-radius: var(--radius-1);
+  background: var(--surface);
+}
+
+.pending {
+  --tone: var(--ink-soft);
+}
+.active {
+  --tone: var(--signal-ink);
+}
+.done {
+  --tone: var(--evidence-ink);
+}
+.attention {
+  --tone: var(--caution-ink);
+}
+.blocked {
+  /* Missing documents are routine, so the words stay calm; the shape and the accent on it carry the state. */
+  --tone: var(--ink);
+}
+
+.blocked svg {
+  color: var(--signal-ink);
+}
+.failed {
+  --tone: var(--danger);
+}
+.skipped {
+  --tone: var(--ink-soft);
+}
+.unknown {
+  --tone: var(--ink-soft);
+}
+.info {
+  --tone: var(--blueprint);
+}
+
+/* Only a stage the backend reports as running breathes; every other state is still. */
+.active svg {
+  animation: breathe 1.8s var(--ease) infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--ink-soft);
+}

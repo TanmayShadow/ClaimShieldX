@@ -1,0 +1,150 @@
+.stack {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+}
+
+.head h2 {
+  font-size: var(--text-xl);
+}
+
+.lede {
+  margin: var(--space-2) 0 0;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+}
+
+.results {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--radius-2);
+}
+
+.result[data-outcome='FLAG'] {
+  border-color: var(--caution);
+  border-width: 2px;
+}
+
+.resultHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.resultHead h3 {
+  margin-right: auto;
+  font-size: var(--text-md);
+}
+
+.explanation {
+  margin: 0;
+  max-width: var(--measure);
+}
+
+.meaning {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.more {
+  font-size: var(--text-sm);
+}
+
+.more summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: var(--space-2) 0;
+}
+
+.more h4 {
+  margin: var(--space-3) 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.more ul {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
+.refs {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: 0 !important;
+  list-style: none;
+}
+
+.quote {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.values {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.values > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) 1fr;
+  gap: var(--space-3);
+}
+
+.values dt {
+  color: var(--ink-soft);
+}
+
+.values dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.nested {
+  padding-left: var(--space-4) !important;
+}
+
+@media (max-width: 40rem) {
+  .values > div {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

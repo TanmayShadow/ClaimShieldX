@@ -1,0 +1,32 @@
+.stamp {
+  --tone: var(--ink-soft);
+  display: inline-block;
+  padding: 0.1rem var(--space-2);
+  border: 1.5px solid var(--tone);
+  border-radius: var(--radius-1);
+  color: var(--tone);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  transform: rotate(-1.5deg);
+  white-space: nowrap;
+}
+
+.signal {
+  --tone: var(--signal-ink);
+}
+.evidence {
+  --tone: var(--evidence-ink);
+}
+.caution {
+  --tone: var(--caution-ink);
+}
+.blueprint {
+  --tone: var(--blueprint);
+}
+.danger {
+  --tone: var(--danger);
+}

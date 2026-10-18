@@ -1,0 +1,296 @@
+.layout {
+  display: grid;
+  gap: var(--space-7);
+}
+
+.section h2 {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-xl);
+}
+
+.lede {
+  max-width: var(--measure);
+  margin-bottom: var(--space-4);
+  color: var(--ink-soft);
+}
+
+.stack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* ---------- checklist ---------- */
+.checklist {
+  width: 100%;
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--radius-2);
+}
+
+.checklist th,
+.checklist td,
+.docs th,
+.docs td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.checklist tbody tr:last-child th,
+.checklist tbody tr:last-child td,
+.docs tbody tr:last-child th,
+.docs tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.checklist thead th,
+.docs thead th {
+  background: var(--paper);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.checklist tbody th,
+.docs tbody th {
+  font-weight: 600;
+}
+
+.na {
+  color: var(--ink-soft);
+}
+
+.blocks {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding-left: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.issues {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.readinessLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.meaning {
+  max-width: var(--measure);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+/* ---------- upload ---------- */
+.form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 44rem;
+}
+
+.drop {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-2);
+  transition: border-color var(--dur-hover) var(--ease), background-color var(--dur-hover) var(--ease);
+}
+
+.drop[data-over='true'] {
+  border-color: var(--ink);
+  background: var(--paper-deep);
+}
+
+.drop p {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.fileInput {
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-2);
+  background: var(--paper);
+  border: var(--rule-strong);
+  border-radius: var(--radius-2);
+}
+
+.fileInput:hover {
+  border-color: var(--ink);
+}
+
+.chosen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3);
+  background: var(--paper);
+  border-left: 4px solid var(--blueprint);
+  font-size: var(--text-sm);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.progress {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.progress progress {
+  width: 100%;
+  height: 0.75rem;
+  accent-color: var(--ink);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.replacing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3);
+  background: var(--paper-deep);
+  border-left: 4px solid var(--caution-ink);
+  font-size: var(--text-sm);
+}
+
+/* ---------- documents ---------- */
+.docs {
+  width: 100%;
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--radius-2);
+}
+
+.docs tr[data-highlight='true'] {
+  background: color-mix(in srgb, var(--caution) 28%, transparent);
+}
+
+.docs tr[data-superseded='true'] .name {
+  color: var(--ink-soft);
+}
+
+.name {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.detail {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--paper);
+  border-left: 4px solid var(--evidence);
+  font-size: var(--text-sm);
+}
+
+.detail dl {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) minmax(0, 1fr);
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+}
+
+.detail dt {
+  color: var(--ink-soft);
+}
+
+.detail dd {
+  margin: 0;
+}
+
+.detail ul {
+  display: grid;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+}
+
+.preview {
+  max-width: 100%;
+  max-height: 28rem;
+  border: var(--rule);
+  background: var(--surface);
+}
+
+@media (max-width: 56rem) {
+  .checklist,
+  .checklist tbody,
+  .docs,
+  .docs tbody {
+    display: block;
+  }
+  .checklist thead,
+  .docs thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .checklist tr,
+  .docs tr {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--rule);
+  }
+  .checklist tbody tr:last-child,
+  .docs tbody tr:last-child {
+    border-bottom: 0;
+  }
+  /* The column headings are hidden when rows stack, so each value says what it is. */
+  .checklist td[data-label],
+  .docs td[data-label] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  .checklist td[data-label]::before,
+  .docs td[data-label]::before {
+    content: attr(data-label);
+    min-width: 6.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-soft);
+  }
+  .checklist th,
+  .checklist td,
+  .docs th,
+  .docs td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+}

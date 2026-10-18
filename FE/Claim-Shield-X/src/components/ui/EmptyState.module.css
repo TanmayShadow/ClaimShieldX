@@ -1,0 +1,20 @@
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+  max-width: 34rem;
+  padding: var(--space-6) 0;
+}
+
+.art {
+  width: min(14rem, 100%);
+}
+
+.title {
+  font-size: var(--text-xl);
+}
+
+.text {
+  color: var(--ink-soft);
+  max-width: var(--measure);
+}
