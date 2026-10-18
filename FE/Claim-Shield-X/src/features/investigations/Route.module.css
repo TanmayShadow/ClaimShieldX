@@ -1,0 +1,162 @@
+.route {
+  position: relative;
+}
+
+.list {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-2);
+  list-style: none;
+}
+
+/* The track behind the nodes. Solid where work is done, dotted where it is not, flowing only where a stage really runs. */
+.list::before {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 2.25rem;
+  border-top: 3px dotted var(--line-strong);
+}
+
+.done {
+  position: absolute;
+  left: 8%;
+  top: 2.25rem;
+  height: 3px;
+  background: var(--ink);
+  width: calc((100% - 16%) * var(--progress, 0));
+  transition: width var(--dur-stage) var(--ease);
+}
+
+.flow {
+  position: absolute;
+  top: 2.25rem;
+  height: 3px;
+  left: calc(8% + (100% - 16%) * var(--progress, 0));
+  width: calc((100% - 16%) / 5);
+  background: repeating-linear-gradient(90deg, var(--signal) 0 10px, transparent 10px 20px);
+  animation: flow 0.9s linear infinite;
+}
+
+@keyframes flow {
+  to {
+    background-position: 20px 0;
+  }
+}
+
+.node {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: 100%;
+  padding: var(--space-2) var(--space-1) var(--space-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-2);
+  text-align: center;
+  transition:
+    background-color var(--dur-hover) var(--ease),
+    border-color var(--dur-hover) var(--ease);
+}
+
+.node:hover {
+  background: var(--paper-deep);
+}
+
+.node[aria-pressed='true'] {
+  background: var(--surface);
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  background: var(--paper);
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+}
+
+.node[data-status='OK'] .icon {
+  border-color: var(--ink);
+}
+.node[data-status='RUNNING'] .icon {
+  border-color: var(--signal);
+  border-style: solid;
+}
+.node[data-status='DEGRADED'] .icon {
+  border-color: var(--caution-ink);
+}
+.node[data-status='FAILED'] .icon {
+  border-color: var(--danger);
+}
+.node[data-status='PENDING'] .icon,
+.node[data-status='SKIPPED'] .icon {
+  border-style: dashed;
+}
+
+.node[aria-pressed='true'] .icon {
+  background: var(--surface);
+}
+
+.step {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.when {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+
+@media (max-width: 56rem) {
+  .list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .list::before {
+    left: 2.6rem;
+    right: auto;
+    top: 1rem;
+    bottom: 1rem;
+    border-top: 0;
+    border-left: 3px dotted var(--line-strong);
+  }
+  .done,
+  .flow {
+    display: none;
+  }
+  .node {
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-items: start;
+    align-items: center;
+    column-gap: var(--space-3);
+    text-align: left;
+  }
+  .text {
+    display: grid;
+  }
+}
+
+@media (min-width: 56.01rem) {
+  .text {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-1);
+  }
+}

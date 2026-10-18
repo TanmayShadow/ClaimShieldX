@@ -1,0 +1,57 @@
+.callout {
+  --tone: var(--blueprint);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: var(--rule);
+  border-left: 4px solid var(--tone);
+  border-radius: var(--radius-2);
+}
+
+.icon {
+  color: var(--tone);
+  margin-top: 0.1rem;
+}
+
+.body {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.text {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.info {
+  --tone: var(--blueprint);
+}
+.caution {
+  --tone: var(--caution-ink);
+}
+.danger {
+  --tone: var(--danger);
+}
+.evidence {
+  --tone: var(--evidence-ink);
+}
+.neutral {
+  --tone: var(--ink-soft);
+}

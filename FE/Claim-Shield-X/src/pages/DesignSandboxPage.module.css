@@ -1,0 +1,92 @@
+.page {
+  display: grid;
+  gap: var(--space-7);
+  padding-bottom: var(--space-9);
+}
+
+.note {
+  max-width: var(--measure);
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.cols {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.stack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.specimen h3 {
+  margin-bottom: var(--space-2);
+}
+
+.display {
+  font-size: var(--text-display);
+  line-height: 1;
+}
+
+.swatches {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  list-style: none;
+}
+
+.swatch {
+  display: grid;
+  grid-template-rows: 3.5rem auto;
+  border: var(--rule);
+  background: var(--surface);
+}
+
+.chip {
+  border-bottom: var(--rule);
+}
+
+.swatchText {
+  display: grid;
+  gap: 0.15rem;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.swatchText strong {
+  font-weight: 600;
+}
+
+.swatchText span {
+  color: var(--ink-soft);
+}
+
+.dark {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-2);
+}
+
+.dark a {
+  color: var(--paper);
+}
+
+.sample {
+  display: grid;
+  gap: var(--space-2);
+}

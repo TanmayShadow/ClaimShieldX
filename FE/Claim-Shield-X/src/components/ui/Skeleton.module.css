@@ -1,0 +1,53 @@
+.skeleton {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bar {
+  height: 0.875rem;
+  background: var(--line);
+  border-radius: var(--radius-1);
+  animation: fade 1.6s var(--ease) infinite;
+}
+
+.bar:nth-child(odd) {
+  width: 100%;
+}
+
+.bar:nth-child(even) {
+  width: 78%;
+}
+
+.block {
+  height: 7rem;
+  background: var(--paper-deep);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-2);
+  animation: fade 1.6s var(--ease) infinite;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 6rem;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: var(--rule);
+}
+
+.row > span {
+  height: 0.875rem;
+  background: var(--line);
+  border-radius: var(--radius-1);
+  animation: fade 1.6s var(--ease) infinite;
+}
+
+@keyframes fade {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}

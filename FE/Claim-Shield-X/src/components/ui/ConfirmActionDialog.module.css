@@ -1,0 +1,36 @@
+.dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 0;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-3);
+  box-shadow: var(--shadow-overlay);
+}
+
+.dialog::backdrop {
+  background: rgb(24 35 33 / 0.55);
+}
+
+.inner {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.title {
+  font-size: var(--text-lg);
+}
+
+.consequence {
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}

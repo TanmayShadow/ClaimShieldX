@@ -1,0 +1,106 @@
+.field {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
+.hint {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.control {
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: var(--rule-strong);
+  border-radius: var(--radius-2);
+  color: var(--ink);
+  transition:
+    border-color var(--dur-hover) var(--ease),
+    background-color var(--dur-hover) var(--ease);
+}
+
+.control::placeholder {
+  color: var(--ink-soft);
+  opacity: 1;
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.control:focus-visible {
+  border-color: var(--ink);
+}
+
+.control:disabled,
+.control[readonly] {
+  background: var(--paper-deep);
+  color: var(--ink-soft);
+  border-style: dashed;
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--danger);
+  box-shadow: inset 4px 0 0 var(--danger);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+textarea.control {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.selectWrap select.control {
+  appearance: none;
+  padding-right: var(--space-7);
+}
+
+.selectWrap svg {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--ink);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--danger);
+}
+
+.error svg {
+  flex: none;
+  margin-top: 0.1rem;
+}

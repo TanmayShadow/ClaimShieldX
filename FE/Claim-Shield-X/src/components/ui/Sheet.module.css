@@ -1,0 +1,67 @@
+.wrap {
+  position: relative;
+}
+
+.withTab {
+  margin-top: 1.5rem;
+}
+
+.tab {
+  position: absolute;
+  top: -1.5rem;
+  left: var(--space-4);
+  max-width: calc(100% - 4rem);
+  padding: 0.15rem var(--space-3);
+  overflow: hidden;
+  background: var(--paper-deep);
+  border: var(--rule);
+  border-bottom: 0;
+  border-radius: var(--radius-2) var(--radius-2) 0 0;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet {
+  position: relative;
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--radius-2);
+}
+
+/* Folded corner: a hard-stop triangle, not a gradient effect. */
+.folded {
+  border-top-right-radius: 0;
+}
+
+.folded::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 22px;
+  height: 22px;
+  background:
+    linear-gradient(
+      to bottom left,
+      transparent calc(50% - 0.75px),
+      var(--line) calc(50% - 0.75px),
+      var(--line) calc(50% + 0.75px),
+      transparent calc(50% + 0.75px)
+    ),
+    linear-gradient(to bottom left, var(--paper) 50%, var(--paper-deep) 50%);
+  pointer-events: none;
+}
+
+.pad {
+  padding: var(--space-5);
+}
+
+@media (max-width: 40rem) {
+  .pad {
+    padding: var(--space-4);
+  }
+}

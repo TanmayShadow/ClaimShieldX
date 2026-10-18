@@ -1,0 +1,58 @@
+.header {
+  display: grid;
+  gap: var(--space-3);
+  padding-block: var(--space-6) var(--space-5);
+}
+
+.crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.crumbs li + li::before {
+  content: '/';
+  margin-right: var(--space-2);
+  color: var(--line-strong);
+}
+
+.crumbs a {
+  color: var(--ink-soft);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-5);
+}
+
+.titles {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.title {
+  font-size: var(--text-title);
+  overflow-wrap: anywhere;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.description {
+  max-width: var(--measure);
+  color: var(--ink-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

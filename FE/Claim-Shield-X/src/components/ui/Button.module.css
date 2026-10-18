@@ -1,0 +1,133 @@
+.button {
+  --shadow: 3px 3px 0 var(--ink);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-2);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  transition:
+    background-color var(--dur-hover) var(--ease),
+    border-color var(--dur-hover) var(--ease),
+    box-shadow var(--dur-hover) var(--ease),
+    transform var(--dur-hover) var(--ease);
+}
+
+.button:hover {
+  text-decoration: none;
+}
+
+.sm {
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.block {
+  display: flex;
+  width: 100%;
+}
+
+/* Primary: signal fill with a hard printed offset. One per view. */
+.primary {
+  background: var(--signal);
+  border-color: var(--ink);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.primary:hover {
+  background: var(--signal-deep);
+  color: var(--surface);
+}
+
+.primary:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.secondary {
+  background: var(--surface);
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.secondary:hover {
+  background: var(--paper-deep);
+}
+
+.secondary:active {
+  background: var(--line);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+}
+
+.ghost:hover {
+  background: var(--paper-deep);
+  text-decoration: underline;
+  text-decoration-color: var(--ink);
+}
+
+.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--surface);
+}
+
+.danger:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  background: var(--paper-deep);
+  border: 1px dashed var(--line-strong);
+  color: var(--ink-soft);
+  box-shadow: none;
+  transform: none;
+  text-decoration: none;
+}
+
+.button[aria-busy='true'] {
+  cursor: progress;
+}
+
+.spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (forced-colors: active) {
+  .button {
+    border: 1px solid ButtonText;
+  }
+}
