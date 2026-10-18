@@ -89,6 +89,13 @@ class MigrationTests {
                 assertThat(scalar(connection, "select count(*) from pg_constraint where conname in ('uq_rule_runs_inputs', 'uq_rule_results_run_rule', 'fk_rule_results_run', 'ck_rule_results_severity_with_flag')")).isEqualTo("4");
                 assertThat(scalar(connection, "select count(*) from pg_indexes where indexname in ('idx_documents_organization_sha256', 'idx_document_extractions_invoices', 'idx_rule_runs_claim_created')")).isEqualTo("3");
                 assertThat(scalar(connection, "select data_type from information_schema.columns where table_name = 'rule_results' and column_name = 'result_values'")).isEqualTo("jsonb");
+                assertThat(scalar(connection, "select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('investigations', 'investigation_stages')")).isEqualTo("2");
+                assertThat(scalar(connection, "select count(*) from pg_indexes where indexname in ('uq_investigations_one_active_per_claim', 'idx_investigations_claimable', 'idx_investigations_organization_created')")).isEqualTo("3");
+                assertThat(scalar(connection, "select count(*) from pg_constraint where conname in ('fk_investigations_rule_run', 'ck_investigations_lease', 'ck_investigations_terminal_lease', 'uq_investigation_stages_stage')")).isEqualTo("4");
+                assertThat(scalar(connection, "select count(*) from information_schema.tables where table_schema = 'public' and table_name in "
+                        + "('evidence_snapshots', 'evidence_items', 'investigation_analyses', 'findings', 'reports', 'review_actions', 'audit_events')")).isEqualTo("7");
+                assertThat(scalar(connection, "select count(*) from pg_constraint where conname in ('uq_evidence_snapshots_investigation', 'uq_evidence_items_ref', 'uq_findings_ordinal', "
+                        + "'uq_reports_investigation', 'uq_reports_claim_version', 'ck_reports_score', 'ck_findings_rejection', 'ck_review_actions_rationale', 'ck_investigation_analyses_error')")).isEqualTo("9");
             }
         });
     }

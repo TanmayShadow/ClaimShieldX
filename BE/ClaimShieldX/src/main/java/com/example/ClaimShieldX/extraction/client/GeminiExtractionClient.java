@@ -72,7 +72,7 @@ public class GeminiExtractionClient implements ExtractionModelClient {
         return properties.thinkingLevel().equals("MINIMAL") ? ThinkingLevel.Known.MINIMAL : ThinkingLevel.Known.LOW;
     }
 
-    static ModelResponse toModelResponse(GenerateContentResponse response) throws ModelCallException {
+    public static ModelResponse toModelResponse(GenerateContentResponse response) throws ModelCallException {
         if (response.promptFeedback().flatMap(GenerateContentResponsePromptFeedback::blockReason).isPresent()) {
             throw new ModelCallException(Category.BLOCKED, "The prompt was blocked by the model service", null);
         }
@@ -99,7 +99,7 @@ public class GeminiExtractionClient implements ExtractionModelClient {
     }
 
     /** Sorts an SDK failure into what should happen next. Only the status code and status text are ever logged. */
-    static ModelCallException classify(RuntimeException e) {
+    public static ModelCallException classify(RuntimeException e) {
         if (e instanceof ApiException api) {
             int code = api.code();
             String message = api.message() == null ? "" : api.message();

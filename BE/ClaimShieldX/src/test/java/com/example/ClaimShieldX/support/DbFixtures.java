@@ -115,6 +115,11 @@ public class DbFixtures {
             jdbc.update("delete from historical_claims where organization_id = ?", organizationId);
             jdbc.update("delete from historical_import_rows where organization_id = ?", organizationId);
             jdbc.update("delete from historical_imports where organization_id = ?", organizationId);
+            for (String table : new String[]{"review_actions", "audit_events", "findings", "reports", "investigation_analyses", "evidence_items", "evidence_snapshots"}) {
+                jdbc.update("delete from " + table + " where organization_id = ?", organizationId);
+            }
+            jdbc.update("delete from investigation_stages where organization_id = ?", organizationId);
+            jdbc.update("delete from investigations where organization_id = ?", organizationId);
             jdbc.update("delete from rule_results where organization_id = ?", organizationId);
             jdbc.update("delete from rule_runs where organization_id = ?", organizationId);
             jdbc.update("delete from document_extractions where organization_id = ?", organizationId);

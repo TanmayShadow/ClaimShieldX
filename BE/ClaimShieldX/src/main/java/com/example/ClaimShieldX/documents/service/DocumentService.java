@@ -11,6 +11,7 @@ import com.example.ClaimShieldX.documents.repository.DocumentRepository;
 import com.example.ClaimShieldX.documents.storage.DocumentStorage;
 import com.example.ClaimShieldX.exceptions.*;
 import com.example.ClaimShieldX.idempotency.service.IdempotencyService;
+import com.example.ClaimShieldX.investigation.service.EvidenceWaitingNotifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -46,15 +47,18 @@ public class DocumentService {
     private final DocumentStorage storage;
     private final IdempotencyService idempotencyService;
     private final int maxDocumentsPerClaim;
+    private final EvidenceWaitingNotifier waitingNotifier;
 
     public DocumentService(ClaimsRepository claimsRepository, DocumentRepository documentRepository,
                            DocumentPersistence persistence, DocumentStorage storage, IdempotencyService idempotencyService,
+                           EvidenceWaitingNotifier waitingNotifier,
                            @Value("${app.documents.max-per-claim:50}") int maxDocumentsPerClaim) {
         this.claimsRepository = claimsRepository;
         this.documentRepository = documentRepository;
         this.persistence = persistence;
         this.storage = storage;
         this.idempotencyService = idempotencyService;
+        this.waitingNotifier = waitingNotifier;
         this.maxDocumentsPerClaim = maxDocumentsPerClaim;
     }
 
@@ -93,6 +97,7 @@ public class DocumentService {
             idempotencyService.complete(begin.keyId(), 201, RESOURCE_TYPE, saved.getId());
             log.info("Document stored: organization={} claim={} document={} type={} sizeBytes={}",
                     organizationId, claimId, saved.getId(), documentType, inspection.sizeBytes());
+            waitingNotifier.documentAdded(organizationId, claimId);
             return new UploadResult(toResponse(saved), false);
         } catch (RuntimeException e) {
             deleteQuietly(objectKey);

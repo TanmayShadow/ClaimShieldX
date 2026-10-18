@@ -197,6 +197,25 @@ public class GlobalExceptionHandler {
         return respond(HttpStatus.CONFLICT, "INVALID_STATE_TRANSITION", "The requested change is not allowed in the current state");
     }
 
+    @ExceptionHandler(InvestigationAlreadyActiveException.class)
+    public ResponseEntity<ErrorResponse> handleInvestigationAlreadyActive(InvestigationAlreadyActiveException e){
+        return new ResponseEntity<ErrorResponse>(
+                new ErrorResponse(HttpStatus.CONFLICT, "INVESTIGATION_ALREADY_ACTIVE", "This claim already has an investigation in progress",
+                        null, Map.of("activeInvestigationId", e.getActiveInvestigationId().toString())),
+                HttpStatus.CONFLICT
+        );
+    }
+
+    @ExceptionHandler(ReportVersionMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleReportVersionMismatch(ReportVersionMismatchException e){
+        return respond(HttpStatus.CONFLICT, "REPORT_VERSION_MISMATCH", "The report version in the request is not the version of this investigation's report");
+    }
+
+    @ExceptionHandler(InvestigationQuotaExceededException.class)
+    public ResponseEntity<ErrorResponse> handleInvestigationQuota(InvestigationQuotaExceededException e){
+        return respond(HttpStatus.TOO_MANY_REQUESTS, "INVESTIGATION_QUOTA_EXCEEDED", "The organization has reached its daily limit of investigations. Try again later.");
+    }
+
     @ExceptionHandler(IdempotencyKeyReusedException.class)
     public ResponseEntity<ErrorResponse> handleIdempotencyKeyReused(IdempotencyKeyReusedException e){
         return respond(HttpStatus.UNPROCESSABLE_ENTITY, "IDEMPOTENCY_KEY_REUSED", "This Idempotency-Key was already used with a different request");
