@@ -28,12 +28,12 @@ export function Hero({ actions }: HeroProps) {
             </a>
             {actions}
           </div>
-          <p className={styles.note}>Prototype. Every example on this page uses synthetic data.</p>
+          {/* <p className={styles.note}>Prototype. Every example on this page uses synthetic data.</p> */}
         </div>
         <figure className={styles.art} style={{ margin: 0 }}>
           <ClaimFile title="Illustration: a case folder holding an invoice, an estimate and a damage photograph, joined by a dotted evidence path. An investigator looks over the edge through a magnifier." />
           <figcaption className={styles.caption}>
-            <Stamp tone="blueprint">Illustration · no real claim</Stamp>
+            <Stamp tone="blueprint">No real claim</Stamp>
           </figcaption>
         </figure>
       </div>

@@ -139,3 +139,44 @@ export async function waitForInvestigation(request: APIRequestContext, token: st
     await new Promise((r) => setTimeout(r, 2000))
   }
 }
+
+/** An organization with a fixed administrator, made by e2e/seed-history.sh. Imports of this suite go here. */
+export const IMPORT_ORGANIZATION = 'Org I'
+export const IMPORT_ADMIN_EMAIL = 'import-admin@org-i.test'
+
+const CLAIMS_HEADER =
+  'source_record_id,external_claim_id,claim_version,vehicle_token,policy_token,claimant_token,garage_id,incident_at,reported_at,claim_type,claim_status,outcome_status,claimed_amount,approved_amount,currency,repair_summary,damage_area_codes,repair_completed_at'
+
+export type HistoryRow = { id: string; claim: string; vehicle: string; incidentAt?: string; claimType?: string }
+
+/** A claims-history CSV with one valid row per entry. Unique ids per call keep runs independent of one another. */
+export function claimsCsv(rows: HistoryRow[], extraLines: string[] = []): Buffer {
+  const lines = rows.map(
+    (r) => `${r.id},${r.claim},1,${r.vehicle},POL-${r.id},,GARAGE-E2E-1,${r.incidentAt ?? '2026-06-01'},2026-06-02,${r.claimType ?? 'COLLISION'},CLOSED_PAID,,12000.00,10000.00,INR,Bumper repaired,FRONT_BUMPER,2026-06-10`,
+  )
+  return Buffer.from([CLAIMS_HEADER, ...lines, ...extraLines].join('\n') + '\n')
+}
+
+export async function adminToken(request: APIRequestContext): Promise<string> {
+  const response = await request.post('/api/v1/auth/login', { data: { email: IMPORT_ADMIN_EMAIL, password: PASSWORD } })
+  expect(response.status(), 'import administrator login (run e2e/seed-history.sh)').toBe(200)
+  return (await response.json()).accessToken as string
+}
+
+const KIND_WORDS: Record<string, string> = {
+  CLAIM_FORM: 'claim form',
+  POLICY_RECORD: 'policy record',
+  DAMAGE_PHOTOGRAPH: 'damage photograph',
+  GARAGE_ESTIMATE: 'garage estimate',
+  JOB_CARD: 'job card',
+  FINAL_INVOICE: 'final invoice',
+  OTHER: 'other document',
+}
+
+/** How a person adds a document: press the Upload button on that document's row, then choose the file in the chooser that opens. */
+export async function uploadFromRow(page: Page, documentType: string, file: string | { name: string; mimeType: string; buffer: Buffer }): Promise<void> {
+  const words = KIND_WORDS[documentType] ?? documentType.toLowerCase().replace(/_/g, ' ')
+  const button = page.getByRole('button', { name: new RegExp(`^(Upload|Add another) ${words}$`) })
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), button.click()])
+  await chooser.setFiles(file)
+}

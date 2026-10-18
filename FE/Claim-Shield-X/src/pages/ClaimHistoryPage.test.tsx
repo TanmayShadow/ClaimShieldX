@@ -39,8 +39,9 @@ it('says that no history was imported is not the same as no match', async () => 
   serve(base)
   setup()
   expect(await screen.findByText('No historical claims have been imported, so nothing could be compared.')).toBeInTheDocument()
-  expect(screen.getByText('This is not the same as finding no match.')).toBeInTheDocument()
+  expect(screen.getAllByText(/This is not the same as finding no match\./).length).toBeGreaterThan(0)
   expect(screen.getByText(/A garage volume is context only\./)).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Add history on the History imports page' })).toHaveAttribute('href', '/app/imports')
   // No data must never look like a clean result: it carries the caution shape, not the check mark.
   const callout = screen.getByText('No historical claims have been imported, so nothing could be compared.').closest('[role="status"]')!
   expect(callout.querySelector('[data-icon]')).toHaveAttribute('data-icon', 'alert')

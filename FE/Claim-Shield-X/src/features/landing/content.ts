@@ -86,7 +86,7 @@ export const capabilities: CapabilityRow[] = [
   { name: 'Document intake and readiness', detail: 'Upload, checksum, stage-aware checklist, and which checks a missing document stops.', availability: 'available' },
   { name: 'Reading invoices and estimates', detail: 'Fields with page and quote, unknown kept unknown, totals recalculated in code.', availability: 'available' },
   { name: 'Eight deterministic checks', detail: 'Invoice arithmetic, estimate-to-invoice variance, date consistency, repeated files, repeated invoice numbers, repeated lines, history links, required evidence.', availability: 'available' },
-  { name: 'History import and comparison', detail: 'Earlier claims matched by exact token, with the reason shown. The CSV import exists in the backend for administrators; this app has no import screen yet.', availability: 'available' },
+  { name: 'History import and comparison', detail: 'Earlier claims matched by exact token, with the reason shown. Administrators import the CSV files on the History imports page, with a reason shown for every rejected row.', availability: 'available' },
   { name: 'Investigation runs with live stages', detail: 'Queue a run and watch each stage report its own state, wait for a missing document, retry or cancel, through to a finished report.', availability: 'available' },
   { name: 'Evidence-linked explanations', detail: 'Hypotheses with counter-evidence and unknowns, every citation verified in code.', availability: 'available' },
   { name: 'Reviewable report and recorded actions', detail: 'A versioned report, a review-priority score with its definition, and append-only human actions with an audit trail.', availability: 'available' },

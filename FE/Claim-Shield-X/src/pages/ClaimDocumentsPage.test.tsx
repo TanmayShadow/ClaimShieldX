@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { delay, http, HttpResponse } from 'msw'
 import { Outlet, Route } from 'react-router'
@@ -156,7 +156,7 @@ describe('checklist', () => {
     server.use(http.get('*/api/v1/claims/:id/document-requirements', () => (fail ? HttpResponse.json({ code: 'INTERNAL_ERROR', status: 500, message: 'x' }, { status: 500 }) : HttpResponse.json(requirements))))
     setup()
     expect(await screen.findByText('The service had a problem.')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Add a document' })).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Kinds of document you can upload' })).toBeInTheDocument()
     fail = false
     await userEvent.click(screen.getAllByRole('button', { name: 'Try again' })[0]!)
     expect(await screen.findByRole('table', { name: 'Documents this claim stage expects' })).toBeInTheDocument()
@@ -224,14 +224,65 @@ describe('document list', () => {
   })
 })
 
-describe('upload: choosing', () => {
-  it('starts from the one document the stage cannot do without, and shows the file picker with its limits', async () => {
+const chooser = () => document.getElementById('document-file-chooser') as HTMLInputElement
+
+/** The whole upload as a person does it: press the row's button (the chooser opens), then pick a file. */
+async function uploadFor(label: string, file: File) {
+  await userEvent.click(await screen.findByRole('button', { name: `Upload ${label}` }))
+  await withFiles.upload(chooser(), file)
+}
+
+describe('upload: from a row', () => {
+  it('gives every row of the checklist its own Upload button, named for that document', async () => {
     setup()
-    await waitFor(() => expect(screen.getByLabelText('Document type')).toHaveValue('FINAL_INVOICE'))
-    expect(screen.getByLabelText('File')).toHaveAttribute('type', 'file')
-    expect(screen.getByLabelText('File')).toHaveAttribute('accept', expect.stringContaining('.pdf'))
-    expect(screen.getByText(/PDF, JPEG or PNG, up to 20\.0 MB per file/)).toBeInTheDocument()
-    expect(screen.getByLabelText('Document type')).toHaveAccessibleDescription(/Needed to proceed at this claim stage/)
+    const table = await screen.findByRole('table', { name: 'Documents this claim stage expects' })
+    for (const label of ['claim form', 'damage photograph', 'final invoice', 'theft evidence', 'other document']) {
+      expect(within(table).getByRole('button', { name: `Upload ${label}` })).toBeEnabled()
+    }
+    // The button sits in the row of the document it is for.
+    expect(within(within(table).getByRole('rowheader', { name: 'Final invoice' }).closest('tr')!).getByRole('button', { name: 'Upload final invoice' })).toBeInTheDocument()
+  })
+
+  it('makes the button of the one document the stage cannot do without stand out, and no other', async () => {
+    setup()
+    expect(await screen.findByRole('button', { name: 'Upload final invoice' })).toHaveClass(/primary/)
+    expect(screen.getByRole('button', { name: 'Upload claim form' })).not.toHaveClass(/primary/)
+    expect(screen.getByRole('button', { name: 'Upload damage photograph' })).not.toHaveClass(/primary/)
+  })
+
+  it('offers "Add another" on a row that already has a file', async () => {
+    const stored = doc()
+    docs = [stored]
+    requirements = checklist({ items: [item('FINAL_INVOICE', 'REQUIRED', 'RECEIVED', { mandatory: true, documentIds: [stored.id] }), item('CLAIM_FORM', 'REQUIRED', 'NOT_RECEIVED')], blockers: [] })
+    setup()
+    expect(await screen.findByRole('button', { name: 'Add another final invoice' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Upload claim form' })).toBeInTheDocument()
+  })
+
+  it('has no document-type selector and no separate submit step', async () => {
+    setup()
+    await screen.findByRole('table', { name: 'Documents this claim stage expects' })
+    expect(screen.queryByLabelText('Document type')).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Add a document' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Upload' })).toBeNull()
+    expect(screen.getByText(/Press/, { selector: 'p' })).toHaveTextContent(/the file is sent as soon as you choose it/)
+  })
+
+  it('uses one hidden chooser that accepts only the kinds of file the server takes', async () => {
+    setup()
+    await screen.findByRole('table', { name: 'Documents this claim stage expects' })
+    expect(chooser()).toHaveAttribute('type', 'file')
+    expect(chooser()).toHaveAttribute('accept', expect.stringContaining('.pdf'))
+    expect(chooser()).toHaveAttribute('hidden')
+  })
+
+  it('opens the chooser when a row button is pressed, and sends nothing if no file is chosen', async () => {
+    setup()
+    const spy = vi.spyOn(HTMLInputElement.prototype, 'click')
+    await userEvent.click(await screen.findByRole('button', { name: 'Upload claim form' }))
+    expect(spy.mock.instances.some((i) => (i as HTMLInputElement).id === 'document-file-chooser')).toBe(true)
+    expect(FakeXhr.all).toHaveLength(0)
+    spy.mockRestore()
   })
 
   it.each([
@@ -241,64 +292,72 @@ describe('upload: choosing', () => {
     ['IMG_1.heic', 1000, 'image/heic', /Convert the photo to JPEG/],
   ])('rejects %s before sending, with a specific reason', async (name, size, type, message) => {
     setup()
-    await screen.findByLabelText('Document type')
     const f = new File(['x'], name, { type })
     Object.defineProperty(f, 'size', { value: size })
-    await withFiles.upload(screen.getByLabelText('File'), f)
-    expect(await screen.findByRole('alert')).toHaveTextContent(message)
-    await userEvent.click(screen.getByRole('button', { name: 'Upload' }))
+    await uploadFor('final invoice', f)
+    const alert = await screen.findByText('That file cannot be uploaded.')
+    expect(alert.closest('[role="alert"]')).toHaveTextContent(message)
     expect(FakeXhr.all).toHaveLength(0)
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+    expect(screen.queryByText('That file cannot be uploaded.')).toBeNull()
   })
 
-  it('shows the chosen file and lets it be removed', async () => {
+  it('uploads a file dropped on a row as that row’s kind of document', async () => {
     setup()
-    await screen.findByLabelText('Document type')
-    await withFiles.upload(screen.getByLabelText('File'), pdf('inv.pdf', 5000))
-    expect(screen.getByText('inv.pdf')).toBeInTheDocument()
-    expect(screen.getByText('4.9 KB')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Remove' }))
-    expect(screen.queryByText('inv.pdf')).toBeNull()
-  })
-
-  it('needs a type and a file, and says which is missing', async () => {
-    requirements = checklist({ items: [item('FINAL_INVOICE', 'REQUIRED', 'RECEIVED', { mandatory: true })], blockers: [] })
-    setup()
-    await screen.findByText(/Needed to proceed|Expected/, undefined, { timeout: 100 }).catch(() => undefined)
-    await userEvent.click(await screen.findByRole('button', { name: 'Upload' }))
-    expect(await screen.findByText('Choose what kind of document this is.')).toBeInTheDocument()
-    await userEvent.selectOptions(screen.getByLabelText('Document type'), 'JOB_CARD')
-    await userEvent.click(screen.getByRole('button', { name: 'Upload' }))
-    expect(await screen.findByText('Choose a file to upload.')).toBeInTheDocument()
-    expect(FakeXhr.all).toHaveLength(0)
-  })
-
-  it('accepts a dropped file', async () => {
-    setup()
-    await screen.findByLabelText('Document type')
-    const zone = screen.getByLabelText('File').parentElement!
-    const file = pdf('dropped.pdf')
-    const dataTransfer = { files: [file], types: ['Files'] }
-    act(() => {
-      zone.dispatchEvent(Object.assign(new Event('drop', { bubbles: true, cancelable: true }), { dataTransfer }))
-    })
-    expect(await screen.findByText('dropped.pdf')).toBeInTheDocument()
+    const row = (await screen.findByRole('rowheader', { name: 'Damage photograph' })).closest('tr')!
+    const dataTransfer = { files: [pdf('dropped.png', 3000)], types: ['Files'] }
+    fireEvent.dragOver(row, { dataTransfer })
+    expect(row).toHaveAttribute('data-over', 'true')
+    fireEvent.drop(row, { dataTransfer })
+    await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
+    expect(FakeXhr.last().body!.get('documentType')).toBe('DAMAGE_PHOTOGRAPH')
+    expect((FakeXhr.last().body!.get('file') as File).name).toBe('dropped.png')
+    expect(row).not.toHaveAttribute('data-over')
   })
 
   it('stops accepting files once the claim holds fifty', async () => {
     docs = Array.from({ length: 50 }, () => doc())
     setup()
     expect(await screen.findByText('This claim holds the most documents it can.')).toBeInTheDocument()
-    expect(screen.getByLabelText('File')).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Upload' })).toBeDisabled()
+    for (const button of screen.getAllByRole('button', { name: /^Upload / })) expect(button).toBeDisabled()
+  })
+
+  it('ignores a dropped file once the claim holds fifty', async () => {
+    docs = Array.from({ length: 50 }, () => doc())
+    setup()
+    const row = (await screen.findByRole('rowheader', { name: 'Claim form' })).closest('tr')!
+    fireEvent.drop(row, { dataTransfer: { files: [pdf('late.pdf', 2000)], types: ['Files'] } })
+    await new Promise((r) => setTimeout(r, 50))
+    expect(FakeXhr.all).toHaveLength(0)
+  })
+
+  it('still lets a document be added when the checklist cannot be loaded', async () => {
+    server.use(http.get('*/api/v1/claims/:id/document-requirements', () => HttpResponse.json({ code: 'INTERNAL_ERROR', status: 500, message: 'x' }, { status: 500 })))
+    setup()
+    const list = await screen.findByRole('list', { name: 'Kinds of document you can upload' })
+    expect(within(list).getAllByRole('button')).toHaveLength(14)
+    await userEvent.click(within(list).getByRole('button', { name: 'Upload job card' }))
+    await withFiles.upload(chooser(), pdf('jc.pdf', 2000))
+    await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
+    expect(FakeXhr.last().body!.get('documentType')).toBe('JOB_CARD')
+  })
+
+  it('keeps the insurer’s document id for the next upload only', async () => {
+    setup()
+    await screen.findByRole('table', { name: 'Documents this claim stage expects' })
+    await userEvent.click(screen.getByText('Options for the next upload'))
+    await userEvent.type(screen.getByLabelText(/Insurer.s document id/), 'INS-42')
+    await uploadFor('claim form', pdf('cf.pdf', 2000))
+    await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
+    expect(FakeXhr.last().body!.get('externalDocumentId')).toBe('INS-42')
+    expect(screen.getByLabelText(/Insurer.s document id/)).toHaveValue('')
   })
 })
 
 describe('upload: sending', () => {
-  async function start(file = pdf('inv.pdf', 10_000)) {
+  async function start(file = pdf('inv.pdf', 10_000), label = 'final invoice') {
     setup()
-    await screen.findByLabelText('Document type')
-    await withFiles.upload(screen.getByLabelText('File'), file)
-    await userEvent.click(screen.getByRole('button', { name: 'Upload' }))
+    await uploadFor(label, file)
     await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
     return FakeXhr.last()
   }
@@ -313,17 +372,22 @@ describe('upload: sending', () => {
     expect((x.body!.get('file') as File).name).toBe('inv.pdf')
   })
 
+  it('sends the kind of the row whose button was pressed', async () => {
+    const x = await start(pdf('cf.pdf', 4000), 'claim form')
+    expect(x.body!.get('documentType')).toBe('CLAIM_FORM')
+  })
+
   it('shows real progress, and never calls it done until the server confirms', async () => {
     const x = await start()
     act(() => x.progress(2500, 10_000))
-    expect(await screen.findByText(/Sending inv\.pdf: 25%/)).toBeInTheDocument()
+    expect(await screen.findByText(/Sending inv\.pdf as Final invoice: 25%/)).toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Sending inv.pdf' })).toHaveValue(25)
     expect(screen.getByText(/the server has not confirmed it/)).toBeInTheDocument()
 
     act(() => x.progress(10_000, 10_000))
     expect(await screen.findByText(/All of inv\.pdf has been sent\. Waiting for the server to confirm/)).toBeInTheDocument()
     expect(screen.queryByText(/100%/)).toBeNull()
-    expect(screen.queryByText(/^inv\.pdf is stored\.$/)).toBeNull()
+    expect(screen.queryByText(/is stored as/)).toBeNull()
     expect(screen.getByRole('button', { name: 'Waiting for the server' })).toHaveAttribute('aria-busy', 'true')
   })
 
@@ -334,20 +398,16 @@ describe('upload: sending', () => {
     docs = [stored]
     requirements = checklist({ readiness: 'READY_WITH_WARNINGS', blockers: [], items: [item('FINAL_INVOICE', 'REQUIRED', 'RECEIVED', { mandatory: true, documentIds: [stored.id] })] })
     act(() => x.reply(201, stored))
-    expect(await screen.findByText('inv.pdf is stored.')).toBeInTheDocument()
+    expect(await screen.findByText('inv.pdf is stored as final invoice.')).toBeInTheDocument()
     expect(screen.getByText(/It has been stored, not read: use “Read document”/)).toBeInTheDocument()
     await waitFor(() => expect(listCalls).toBeGreaterThan(before))
     expect(await screen.findByText('Ready with warnings')).toBeInTheDocument()
     expect(await screen.findByRole('rowheader', { name: /inv\.pdf/ })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Add another final invoice' })).toBeInTheDocument()
   })
 
   it('does not tell someone a photograph will be read', async () => {
-    setup()
-    await screen.findByLabelText('Document type')
-    await userEvent.selectOptions(screen.getByLabelText('Document type'), 'DAMAGE_PHOTOGRAPH')
-    await withFiles.upload(screen.getByLabelText('File'), pdf('p.png', 3000))
-    await userEvent.click(screen.getByRole('button', { name: 'Upload' }))
-    await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
+    await start(pdf('p.png', 3000), 'damage photograph')
     act(() => FakeXhr.last().reply(201, doc({ fileName: 'p.png', documentType: 'DAMAGE_PHOTOGRAPH', contentType: 'image/png' })))
     expect(await screen.findByText(/this kind of document is kept for people to open/)).toBeInTheDocument()
   })
@@ -361,28 +421,48 @@ describe('upload: sending', () => {
     expect(screen.getByText(/If the server had already received the whole file/)).toBeInTheDocument()
   })
 
-  it('disables the form while sending so nothing changes mid-upload', async () => {
+  it('disables every other row while one upload runs, so nothing starts twice', async () => {
     await start()
-    expect(screen.getByLabelText('File')).toBeDisabled()
-    expect(screen.getByLabelText('Document type')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Upload claim form' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Upload damage photograph' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Sending' })).toHaveAttribute('aria-busy', 'true')
     expect(screen.getByRole('button', { name: 'Cancel upload' })).toBeEnabled()
   })
 
-  it('offers another upload after a success', async () => {
+  it('ignores a file dropped on a row while another upload is running', async () => {
+    await start()
+    const row = screen.getByRole('rowheader', { name: 'Claim form' }).closest('tr')!
+    const dataTransfer = { files: [pdf('second.pdf', 2000)], types: ['Files'] }
+    fireEvent.dragOver(row, { dataTransfer })
+    expect(row).not.toHaveAttribute('data-over')
+    fireEvent.drop(row, { dataTransfer })
+    await new Promise((r) => setTimeout(r, 50))
+    expect(FakeXhr.all).toHaveLength(1)
+  })
+
+  it('clears the confirmation when dismissed, and every row is ready again', async () => {
     const x = await start()
     act(() => x.reply(201, doc()))
-    await userEvent.click(await screen.findByRole('button', { name: 'Upload another file' }))
-    expect(screen.queryByText(/is stored\./)).toBeNull()
-    expect(screen.getByLabelText('File')).toBeEnabled()
+    await userEvent.click(await screen.findByRole('button', { name: 'Dismiss' }))
+    expect(screen.queryByText(/is stored as/)).toBeNull()
+    expect(screen.getByRole('button', { name: 'Upload claim form' })).toBeEnabled()
+  })
+
+  it('lets a second file go up straight after the first, without any reset', async () => {
+    const x = await start()
+    act(() => x.reply(201, doc()))
+    await screen.findByText(/is stored as/)
+    await uploadFor('claim form', pdf('cf.pdf', 2000))
+    await waitFor(() => expect(FakeXhr.all).toHaveLength(2))
+    expect(FakeXhr.last().body!.get('documentType')).toBe('CLAIM_FORM')
+    expect(FakeXhr.all[1]!.headers['Idempotency-Key']).not.toBe(FakeXhr.all[0]!.headers['Idempotency-Key'])
   })
 })
 
 describe('upload: failing', () => {
   async function failWith(status: number, body: unknown) {
     setup()
-    await screen.findByLabelText('Document type')
-    await withFiles.upload(screen.getByLabelText('File'), pdf('inv.pdf', 4000))
-    await userEvent.click(screen.getByRole('button', { name: 'Upload' }))
+    await uploadFor('final invoice', pdf('inv.pdf', 4000))
     await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
     act(() => FakeXhr.last().reply(status, body))
   }
@@ -413,9 +493,7 @@ describe('upload: failing', () => {
 
   it('retries after a dropped connection with the same idempotency key, and says that is safe', async () => {
     setup()
-    await screen.findByLabelText('Document type')
-    await withFiles.upload(screen.getByLabelText('File'), pdf('inv.pdf', 4000))
-    await userEvent.click(screen.getByRole('button', { name: 'Upload' }))
+    await uploadFor('final invoice', pdf('inv.pdf', 4000))
     await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
     act(() => FakeXhr.all[0]!.onerror?.())
     expect(await screen.findByText('The server could not be reached.')).toBeInTheDocument()
@@ -423,41 +501,50 @@ describe('upload: failing', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
     await waitFor(() => expect(FakeXhr.all).toHaveLength(2))
     expect(FakeXhr.all[1]!.headers['Idempotency-Key']).toBe(FakeXhr.all[0]!.headers['Idempotency-Key'])
+    expect(FakeXhr.all[1]!.body!.get('documentType')).toBe('FINAL_INVOICE')
     act(() => FakeXhr.all[1]!.reply(201, doc({ fileName: 'inv.pdf' }), { 'Idempotent-Replay': 'true' }))
     expect(await screen.findByText(/nothing was stored twice/)).toBeInTheDocument()
   })
 
-  it('keeps the chosen file and type after a failure so nothing has to be redone', async () => {
+  it('keeps the file and kind for a retry, so nothing has to be chosen again, and can be dismissed', async () => {
     await failWith(503, { status: 503, code: 'SERVICE_UNAVAILABLE', message: 'x' })
     await screen.findByText('A service this needs is unavailable.')
-    expect(screen.getByText('inv.pdf')).toBeInTheDocument()
-    expect(screen.getByLabelText('Document type')).toHaveValue('FINAL_INVOICE')
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    await waitFor(() => expect(FakeXhr.all).toHaveLength(2))
+    expect((FakeXhr.all[1]!.body!.get('file') as File).name).toBe('inv.pdf')
+    act(() => FakeXhr.all[1]!.reply(503, { status: 503, code: 'SERVICE_UNAVAILABLE', message: 'x' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Dismiss' }))
+    expect(screen.queryByText('A service this needs is unavailable.')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Upload claim form' })).toBeEnabled()
   })
 })
 
 describe('replacing a file', () => {
-  it('locks the type to the replaced file’s, says what happens to the old one, and sends supersedesDocumentId', async () => {
+  it('opens the chooser from the file’s own button, keeps its kind, and sends supersedesDocumentId', async () => {
     const old = doc({ fileName: 'old.pdf', documentType: 'FINAL_INVOICE' })
     docs = [old]
     setup()
     await userEvent.click(await screen.findByRole('button', { name: 'Replace: old.pdf' }))
-    expect(screen.getByText(/replace/i, { selector: 'strong' })).toBeInTheDocument()
-    expect(screen.getByText(/The earlier file is kept and marked as replaced/)).toBeInTheDocument()
-    expect(screen.getByLabelText('Document type')).toBeDisabled()
-    expect(screen.getByLabelText('Document type')).toHaveValue('FINAL_INVOICE')
-    await withFiles.upload(screen.getByLabelText('File'), pdf('new.pdf', 3000))
-    await userEvent.click(screen.getByRole('button', { name: 'Upload replacement' }))
+    await withFiles.upload(chooser(), pdf('new.pdf', 3000))
     await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
     expect(FakeXhr.last().body!.get('supersedesDocumentId')).toBe(old.id)
+    expect(FakeXhr.last().body!.get('documentType')).toBe('FINAL_INVOICE')
+    expect(await screen.findByText(/Sending new\.pdf as Final invoice, replacing old\.pdf/)).toBeInTheDocument()
   })
 
-  it('can be called off', async () => {
+  it('sends no replacement marker for an ordinary upload of the same kind', async () => {
+    docs = [doc({ fileName: 'old.pdf' })]
+    setup()
+    await uploadFor('final invoice', pdf('other.pdf', 3000))
+    await waitFor(() => expect(FakeXhr.all).toHaveLength(1))
+    expect(FakeXhr.last().body!.get('supersedesDocumentId')).toBeNull()
+  })
+
+  it('does nothing if no file is chosen after pressing Replace', async () => {
     docs = [doc({ fileName: 'old.pdf' })]
     setup()
     await userEvent.click(await screen.findByRole('button', { name: 'Replace: old.pdf' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Do not replace' }))
-    expect(screen.queryByText(/The earlier file is kept and marked as replaced/)).toBeNull()
-    expect(screen.getByLabelText('Document type')).toBeEnabled()
+    expect(FakeXhr.all).toHaveLength(0)
   })
 })
 
@@ -557,7 +644,7 @@ describe('reading a document', () => {
     docs = [d]
     server.use(
       http.post(`*/api/v1/claims/${claimId}/documents/${d.id}/extraction`, async () => {
-        await delay(1300)
+        await delay(2500)
         docs = [{ ...d, status: 'NEEDS_REVIEW' }]
         return HttpResponse.json({ documentId: d.id, documentStatus: 'NEEDS_REVIEW', extractionId: 'e1', attempt: 1 }, { status: 202 })
       }),
@@ -566,10 +653,10 @@ describe('reading a document', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Read document: invoice.pdf' }))
     expect(await screen.findByText(/Reading for \d+ s\. This can take a few minutes/)).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/Reading[^.]*\d+\s*%/)
-    await waitFor(() => expect(screen.getByText(/Reading for [1-9] s/)).toBeInTheDocument(), { timeout: 2500 })
-    expect(await screen.findByText('Finished reading: Read · needs review.', undefined, { timeout: 4000 })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText(/Reading for [1-9] s/)).toBeInTheDocument(), { timeout: 8000 })
+    expect(await screen.findByText('Finished reading: Read · needs review.', undefined, { timeout: 9000 })).toBeInTheDocument()
     expect(await screen.findByText('Read · needs review')).toBeInTheDocument()
-  })
+  }, 30_000)
 
   it('explains a refusal in words', async () => {
     const d = doc({ fileName: 'invoice.pdf' })

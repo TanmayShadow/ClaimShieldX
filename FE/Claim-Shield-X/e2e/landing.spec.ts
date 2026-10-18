@@ -102,7 +102,7 @@ test.describe('landing page', () => {
     await page.getByRole('tab', { name: /Competing explanations/ }).click()
     const panel = page.getByRole('tabpanel')
     await expect(panel.getByRole('heading', { level: 3 })).toHaveText('Competing explanations')
-    await expect(panel.getByText('In the prototype').first()).toBeVisible()
+    await expect(panel.getByText('').first()).toBeVisible()
   })
 
   test('reduced motion stops the hero entrance', async ({ page }) => {

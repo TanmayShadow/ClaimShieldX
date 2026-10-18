@@ -23,7 +23,7 @@ const violations = async (page: Page) =>
 test.describe('application shell (real backend)', () => {
   test('shows the workspace, the signed-in account and only the destinations that exist', async ({ page, request }) => {
     const email = await enter(page, request, 'shell')
-    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText(['Overview', 'Claims'])
+    await expect(page.getByRole('navigation', { name: 'Main' }).getByRole('link')).toHaveText(['Overview', 'Claims', 'History imports'])
     await expect(page.getByRole('link', { name: 'Overview' })).toHaveAttribute('aria-current', 'page')
     await expect(page.getByText('Org A', { exact: true })).toBeVisible()
     await expect(page.getByText(email)).toBeVisible()

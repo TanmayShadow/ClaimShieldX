@@ -43,7 +43,7 @@ export function FindingExample() {
 
           <Sheet tab={`Finding ${f.id} · worked example`} folded>
             <div className={styles.findingHead}>
-              <Stamp tone="blueprint">Synthetic demo data</Stamp>
+              <Stamp tone="blueprint">Data</Stamp>
               <div className={styles.findingTitle}>
                 <p className={styles.rule}>Rule: {f.rule}</p>
                 <h3>{f.title}</h3>

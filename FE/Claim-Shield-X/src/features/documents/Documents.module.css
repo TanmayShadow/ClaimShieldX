@@ -294,3 +294,51 @@
     border: 0;
   }
 }
+
+/* ---------- upload from a row ---------- */
+.status {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.status:empty {
+  display: none;
+}
+
+.checklist tr[data-over='true'] {
+  background: var(--paper-deep);
+  outline: 2px dashed var(--ink);
+  outline-offset: -2px;
+}
+
+.options {
+  max-width: 36rem;
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.options summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: var(--space-2) 0;
+}
+
+.quickList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quickList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--radius-2);
+}

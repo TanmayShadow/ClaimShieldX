@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { ORGANIZATION, apiToken, backendUp, createClaimViaApi, fixture, registerUser, signInThroughUi, uniqueRef } from '../support'
+import { ORGANIZATION, apiToken, backendUp, createClaimViaApi, fixture, registerUser, signInThroughUi, uniqueRef, uploadFromRow } from '../support'
 
 test.beforeEach(async ({ request }) => {
   test.skip(!(await backendUp(request)), 'BLOCKED / NOT RUN: the backend is not answering through the production server.')
@@ -59,10 +59,8 @@ test('a whole session through the production server: sign in, reload on a deep l
 
   // An upload through the forward (multipart, progress) resumes it.
   await page.getByRole('link', { name: 'Documents tab' }).first().click()
-  await page.getByLabel('Document type').selectOption('CLAIM_FORM')
-  await page.getByLabel('File', { exact: true }).setInputFiles(fixture('synthetic-estimate.pdf'))
-  await page.getByRole('button', { name: 'Upload', exact: true }).click()
-  await expect(page.getByText('synthetic-estimate.pdf is stored.')).toBeVisible()
+  await uploadFromRow(page, 'CLAIM_FORM', fixture('synthetic-estimate.pdf'))
+  await expect(page.getByText(/synthetic-estimate\.pdf is stored/)).toBeVisible()
 
   await page.getByRole('navigation', { name: 'Claim sections' }).getByRole('link', { name: 'Investigation' }).click()
   await expect(page.getByText('The investigation finished.')).toBeVisible({ timeout: 30_000 })

@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { Callout } from '@/components/ui/Callout'
 import { StatusMark } from '@/components/ui/StatusMark'
 import type { MarkState } from '@/components/ui/StatusMark'
@@ -33,6 +34,12 @@ export function RelatedClaims({ data }: { data: HistoryMatches }) {
     <div className={styles.stack}>
       <Callout tone={known?.tone ?? 'info'} title={known?.title ?? 'The history lookup returned a state this page does not know.'}>
         {known?.body ?? 'Nothing is concluded from it.'}
+        {data.status === 'NO_HISTORICAL_DATA_AVAILABLE' || data.status === 'HISTORY_IMPORT_FAILED' ? (
+          <>
+            {' '}
+            <Link to="/app/imports">Add history on the History imports page</Link> (organization administrators only).
+          </>
+        ) : null}
       </Callout>
       {data.dataAvailability?.latestClaimsImportFailed && data.status === 'MATCHES_FOUND' ? <Callout tone="caution" title="The latest import failed.">These matches come from earlier data and may be out of date.</Callout> : null}
       {data.truncated ? <Callout tone="caution" title="The list is incomplete.">{data.totalPriorClaims ?? 'More'} earlier claims relate to this one; only the closest are shown.</Callout> : null}

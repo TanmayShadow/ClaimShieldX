@@ -192,7 +192,7 @@ export function DesignSandboxPage() {
               <Stamp>Received</Stamp>
               <Stamp tone="evidence">Checked</Stamp>
               <Stamp tone="caution">Needs review</Stamp>
-              <Stamp tone="blueprint">Synthetic demo data</Stamp>
+              <Stamp tone="blueprint">Data</Stamp>
               <Stamp tone="danger">Unavailable</Stamp>
             </div>
           </div>

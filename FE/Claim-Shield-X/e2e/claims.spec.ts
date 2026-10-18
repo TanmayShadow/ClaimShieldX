@@ -282,6 +282,9 @@ test.describe('tenants and sessions in the browser (real backend)', () => {
     await enter(page, request, 'orgb', OTHER_ORGANIZATION)
 
     await page.goto('/app/claims')
+    await expect(page.getByRole('heading', { level: 1, name: 'Claims' })).toBeVisible()
+    // Let the list finish loading: leaving a page while its session renewal is in flight would strand the session, which is not what this test is about.
+    await page.waitForLoadState('networkidle')
     await expect(page.getByText(secret.internalId)).toHaveCount(0)
 
     await page.goto(`/app/claims/${secret.id}`)
@@ -298,6 +301,9 @@ test.describe('tenants and sessions in the browser (real backend)', () => {
     const mine = await createClaimViaApi(request, seeder, { internalId: uniqueRef('CACHE') })
     await enter(page, request, 'cacheA')
     await page.goto(`/app/claims`)
+    // Wait for the list before loading the next page: leaving mid-way through a session renewal would strand the session.
+    await expect(page.getByRole('heading', { level: 1, name: 'Claims' })).toBeVisible()
+    await page.waitForLoadState('networkidle')
     await page.goto(`/app/claims/${mine.id}`)
     await expect(page.getByRole('heading', { level: 1, name: mine.internalId })).toBeVisible()
     await page.getByRole('button', { name: 'Sign out' }).click()
