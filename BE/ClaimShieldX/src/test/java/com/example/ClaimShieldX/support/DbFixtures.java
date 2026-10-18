@@ -69,6 +69,17 @@ public class DbFixtures {
         return id;
     }
 
+    /** A claim with every identifier chosen, for tests of history matching. Null policy or claimant tokens stay null. */
+    public UUID claimWithTokens(UUID organizationId, String internalId, String vehicleToken, String policyToken, String claimantToken, String garageId, Instant incidentAt) {
+        UUID id = UUID.randomUUID();
+        jdbc.update("""
+                insert into claims(id, organization_id, internal_id, current_stage, policy_token, claimant_token, garage_id,
+                                   vehicle_token, incident_type, incident_at, currency)
+                values (?, ?, ?, 'FINAL_INVOICE_RECEIVED', ?, ?, ?, ?, 'COLLISION', ?, 'INR')
+                """, id, organizationId, internalId, policyToken == null ? "POL-NONE" : policyToken, claimantToken, garageId, vehicleToken, Timestamp.from(incidentAt));
+        return id;
+    }
+
     /** Like {@link #document}, but with a chosen processing status, arrival time and superseded flag. */
     public UUID document(UUID organizationId, UUID claimId, UUID uploadedBy, DocumentType type, String status,
                          Instant receivedAt, boolean superseded) {
@@ -100,6 +111,12 @@ public class DbFixtures {
     public void cleanUp() {
         for (UUID organizationId : organizations) {
             jdbc.update("delete from idempotency_keys where organization_id = ?", organizationId);
+            jdbc.update("delete from garage_history_records where organization_id = ?", organizationId);
+            jdbc.update("delete from historical_claims where organization_id = ?", organizationId);
+            jdbc.update("delete from historical_import_rows where organization_id = ?", organizationId);
+            jdbc.update("delete from historical_imports where organization_id = ?", organizationId);
+            jdbc.update("delete from rule_results where organization_id = ?", organizationId);
+            jdbc.update("delete from rule_runs where organization_id = ?", organizationId);
             jdbc.update("delete from document_extractions where organization_id = ?", organizationId);
             jdbc.update("delete from documents where organization_id = ?", organizationId);
             jdbc.update("delete from claims where organization_id = ?", organizationId);

@@ -125,6 +125,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Reads the historical-data CSV files (quoting, embedded commas and line breaks) -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.12.0</version>
+		</dependency>
+
 		<!-- Counts the pages of an uploaded PDF, so cited page numbers can be checked against the real document,
 		     and builds the synthetic PDFs used by the extraction tests -->
 		<dependency>

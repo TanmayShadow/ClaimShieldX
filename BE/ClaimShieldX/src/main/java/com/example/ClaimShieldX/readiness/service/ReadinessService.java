@@ -44,6 +44,12 @@ public class ReadinessService {
                 evaluation.readiness(), evaluation.items(), evaluation.blockers(), evaluation.warnings());
     }
 
+    /** The checklist outcome for a claim already loaded for its organization; used by the rules, which run without a signed-in user. */
+    @Transactional(readOnly = true)
+    public Evaluation evaluateFor(UUID organizationId, Claim claim) {
+        return evaluate(claim, rules(), evidenceByClaim(organizationId, List.of(claim.getId())).getOrDefault(claim.getId(), List.of()));
+    }
+
     /** Readiness for many claims of one organization with two queries in total, however many claims there are. */
     @Transactional(readOnly = true)
     public Map<UUID, ReadinessSummary> summarize(UUID organizationId, Collection<Claim> claims) {

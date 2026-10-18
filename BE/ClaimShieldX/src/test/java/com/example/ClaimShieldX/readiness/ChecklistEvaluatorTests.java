@@ -316,18 +316,20 @@ class ChecklistEvaluatorTests {
     }
 
     @Test
-    void aMissingEstimateOnlyBlocksTheVarianceCheck() {
+    void aMissingEstimateBlocksNoCheckBecauseTheEstimateAmountOnTheClaimCanServeAsTheVarianceBaseline() {
         Evaluation result = finalStage(doc(FINAL_INVOICE, DocumentStatus.VERIFIED));
 
-        assertThat(item(result, GARAGE_ESTIMATE).blocks()).containsExactly(InvestigationCheck.ESTIMATE_INVOICE_VARIANCE);
+        assertThat(item(result, GARAGE_ESTIMATE).blocks()).isEmpty();
         assertThat(item(result, FINAL_INVOICE).blocks()).isEmpty();
+        assertThat(result.warnings()).anyMatch(w -> w.documentType() == GARAGE_ESTIMATE && w.code() == Code.DOCUMENT_MISSING);
     }
 
     @Test
     void aFailedDocumentBlocksTheSameChecksAsAMissingOne() {
-        Evaluation result = finalStage(doc(FINAL_INVOICE, DocumentStatus.VERIFIED), doc(GARAGE_ESTIMATE, DocumentStatus.FAILED));
+        Evaluation missing = finalStage();
+        Evaluation failed = finalStage(doc(FINAL_INVOICE, DocumentStatus.FAILED));
 
-        assertThat(item(result, GARAGE_ESTIMATE).blocks()).containsExactly(InvestigationCheck.ESTIMATE_INVOICE_VARIANCE);
+        assertThat(item(failed, FINAL_INVOICE).blocks()).isNotEmpty().containsExactlyInAnyOrderElementsOf(item(missing, FINAL_INVOICE).blocks());
     }
 
     @Test
@@ -480,7 +482,12 @@ class ChecklistEvaluatorTests {
         }
         for (InvestigationCheck check : InvestigationCheck.values()) {
             assertThat(check.label()).isNotBlank();
-            assertThat(check.documents()).isNotEmpty().doesNotContain(OTHER).doesNotHaveDuplicates();
+            assertThat(check.documents()).doesNotContain(OTHER).doesNotHaveDuplicates();
+            if (check == InvestigationCheck.DATE_CONSISTENCY) {
+                assertThat(check.documents()).as("the claim record alone supports part of the date check").isEmpty();
+            } else {
+                assertThat(check.documents()).isNotEmpty();
+            }
         }
     }
 

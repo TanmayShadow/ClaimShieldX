@@ -1,4 +1,4 @@
-package com.example.ClaimShieldX.extraction.normalize;
+package com.example.ClaimShieldX.common.utils;
 
 /** Cleans text that came out of a document before it is stored or shown. The document is untrusted input. */
 public final class TextCleaner {

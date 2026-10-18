@@ -82,6 +82,13 @@ class MigrationTests {
                 // 3 stages x 13 document types, plus 6 theft overrides.
                 assertThat(scalar(connection, "select count(*) from document_requirements")).isEqualTo("45");
                 assertThat(scalar(connection, "select data_type from information_schema.columns where table_name = 'document_extractions' and column_name = 'result'")).isEqualTo("jsonb");
+                assertThat(scalar(connection, "select count(*) from information_schema.tables where table_schema = 'public' and table_name in "
+                        + "('historical_imports', 'historical_import_rows', 'historical_claims', 'garage_history_records')")).isEqualTo("4");
+                assertThat(scalar(connection, "select count(*) from pg_constraint where conname in ('uq_historical_claims_source', 'uq_historical_claims_version', 'uq_garage_history_source')")).isEqualTo("3");
+                assertThat(scalar(connection, "select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('rule_runs', 'rule_results')")).isEqualTo("2");
+                assertThat(scalar(connection, "select count(*) from pg_constraint where conname in ('uq_rule_runs_inputs', 'uq_rule_results_run_rule', 'fk_rule_results_run', 'ck_rule_results_severity_with_flag')")).isEqualTo("4");
+                assertThat(scalar(connection, "select count(*) from pg_indexes where indexname in ('idx_documents_organization_sha256', 'idx_document_extractions_invoices', 'idx_rule_runs_claim_created')")).isEqualTo("3");
+                assertThat(scalar(connection, "select data_type from information_schema.columns where table_name = 'rule_results' and column_name = 'result_values'")).isEqualTo("jsonb");
             }
         });
     }

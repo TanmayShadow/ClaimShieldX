@@ -6,7 +6,7 @@ import com.example.ClaimShieldX.extraction.config.ExtractionProperties;
 import com.example.ClaimShieldX.extraction.normalize.AmountParser;
 import com.example.ClaimShieldX.extraction.normalize.CurrencyNormalizer;
 import com.example.ClaimShieldX.extraction.normalize.DateParser;
-import com.example.ClaimShieldX.extraction.normalize.TextCleaner;
+import com.example.ClaimShieldX.common.utils.TextCleaner;
 import com.example.ClaimShieldX.extraction.schema.*;
 
 import java.math.BigDecimal;
