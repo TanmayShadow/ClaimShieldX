@@ -63,7 +63,11 @@ public class ExtractionService {
     }
 
     public ExtractionOutcome extract(UserPrincipal principal, UUID claimId, UUID documentId) {
-        UUID organizationId = principal.getOrganization().getId();
+        return extract(principal.getOrganization().getId(), claimId, documentId);
+    }
+
+    /** The same, for a caller that has an organization but no signed-in user (the investigation worker). */
+    public ExtractionOutcome extract(UUID organizationId, UUID claimId, UUID documentId) {
         Claim claim = claimsRepository.findByIdAndOrganizationId(claimId, organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Claim not found"));
         Document document = documentRepository.findByIdAndOrganizationIdAndClaimId(documentId, organizationId, claimId)
