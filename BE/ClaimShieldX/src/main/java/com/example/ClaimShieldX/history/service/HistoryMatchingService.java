@@ -51,7 +51,12 @@ public class HistoryMatchingService {
 
     @Transactional(readOnly = true)
     public HistoryMatchesResponse matchesFor(UserPrincipal principal, UUID claimId) {
-        UUID organizationId = principal.getOrganization().getId();
+        return matchesFor(principal.getOrganization().getId(), claimId);
+    }
+
+    /** The same lookup for a caller that has an organization but no signed-in user (the rules, later the worker). */
+    @Transactional(readOnly = true)
+    public HistoryMatchesResponse matchesFor(UUID organizationId, UUID claimId) {
         Claim claim = claimsRepository.findByIdAndOrganizationId(claimId, organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Claim not found"));
         HistoryMatcher.ClaimKeys keys = new HistoryMatcher.ClaimKeys(claim.getInternalId(),

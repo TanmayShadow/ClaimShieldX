@@ -101,7 +101,7 @@ class DocumentRequirementsApiTests extends DocumentApiTestBase {
                 .andExpect(jsonPath(item(DocumentType.FINAL_INVOICE, "requirement")).value(contains("REQUIRED")))
                 .andExpect(jsonPath(item(DocumentType.FINAL_INVOICE, "evidenceState")).value(contains("NOT_RECEIVED")))
                 .andExpect(jsonPath(item(DocumentType.FINAL_INVOICE, "documentIds")).value(contains(empty())))
-                .andExpect(jsonPath(item(DocumentType.GARAGE_ESTIMATE, "blocks")).value(contains(contains("ESTIMATE_INVOICE_VARIANCE"))))
+                .andExpect(jsonPath(item(DocumentType.GARAGE_ESTIMATE, "blocks")).value(contains(empty())))
                 .andExpect(jsonPath("$.warnings[*].documentType", hasItems("CLAIM_FORM", "POLICY_RECORD", "GARAGE_ESTIMATE")));
     }
 

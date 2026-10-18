@@ -51,6 +51,33 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
             """)
     List<EvidenceRow> findCurrentEvidence(@Param("organizationId") UUID organizationId, @Param("claimIds") Collection<UUID> claimIds);
 
+    List<Document> findByOrganizationIdAndClaimIdOrderByReceivedAtAscIdAsc(UUID organizationId, UUID claimId);
+
+    /** A document with the same bytes as one of a claim's documents, and the little about its claim that explains the repeat. */
+    interface SameFileRow {
+        UUID getId();
+        UUID getClaimId();
+        String getClaimInternalId();
+        DocumentType getDocumentType();
+        DocumentStatus getStatus();
+        boolean getSuperseded();
+        UUID getSupersedesDocumentId();
+        Instant getReceivedAt();
+        String getSha256();
+        String getVehicleToken();
+        String getPolicyToken();
+    }
+
+    @Query("""
+            select d.id as id, d.claimId as claimId, c.internalId as claimInternalId, d.documentType as documentType, d.status as status,
+                   d.superseded as superseded, d.supersedesDocumentId as supersedesDocumentId, d.receivedAt as receivedAt, d.sha256 as sha256,
+                   c.vehicle.vehicleToken as vehicleToken, c.policy.policyToken as policyToken
+            from Document d, Claim c
+            where c.id = d.claimId and d.organizationId = :organizationId and c.organizationId = :organizationId and d.sha256 in :hashes
+            order by d.receivedAt, d.id
+            """)
+    List<SameFileRow> findSameFile(@Param("organizationId") UUID organizationId, @Param("hashes") Collection<String> hashes, Pageable limit);
+
     // Zero rows updated means it was already superseded (or does not exist).
     @Modifying
     @Query("update Document d set d.superseded = true, d.version = d.version + 1 where d.id = :id and d.superseded = false")
