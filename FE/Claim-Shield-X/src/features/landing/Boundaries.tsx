@@ -13,7 +13,7 @@ export function Boundaries() {
 
         <div className={styles.tableWrap}>
           <table className={styles.table} role="table">
-            <caption className="sr-only">Capabilities and whether they exist in the prototype</caption>
+            <caption className="sr-only">Capabilities and whether they exist </caption>
             <thead role="rowgroup">
               <tr role="row">
                 <th scope="col" role="columnheader">Capability</th>
@@ -27,7 +27,7 @@ export function Boundaries() {
                   <th scope="row" role="rowheader">{c.name}</th>
                   <td role="cell">
                     <StatusMark state={c.availability === 'available' ? 'done' : 'pending'}>
-                      {c.availability === 'available' ? 'In the prototype' : 'Planned'}
+                      {c.availability === 'available' ? '' : 'Planned'}
                     </StatusMark>
                   </td>
                   <td role="cell">{c.detail}</td>

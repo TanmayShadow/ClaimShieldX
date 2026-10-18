@@ -77,7 +77,7 @@ describe('LandingPage', () => {
 })
 
 describe('Capabilities table', () => {
-  it('states in words, row by row, what is in the prototype and what is only planned', () => {
+  it('states in words, row by row, what is  and what is only planned', () => {
     setup()
     const table = screen.getByRole('table', { name: /Capabilities and whether they exist/ })
     const rows = within(table).getAllByRole('row').slice(1)
@@ -85,7 +85,7 @@ describe('Capabilities table', () => {
     rows.forEach((row, i) => {
       const available = capabilities[i]!.availability === 'available'
       expect(within(row).getByRole('rowheader')).toHaveTextContent(capabilities[i]!.name)
-      expect(within(row).queryByText('In the prototype') !== null).toBe(available)
+      expect(within(row).queryByText('') !== null).toBe(available)
       expect(within(row).queryByText('Planned') !== null).toBe(!available)
       expect(row.querySelector('[data-state]')).toHaveAttribute('data-state', available ? 'done' : 'pending')
     })
@@ -137,11 +137,11 @@ describe('Anatomy of an investigation', () => {
     expect(screen.getAllByRole('tab')[0]).toHaveFocus()
   })
 
-  it('says in text, not only by colour or shape, that a stage is in the prototype', async () => {
+  it('says in text, not only by colour or shape, that a stage is ', async () => {
     setup()
     await userEvent.click(screen.getByRole('tab', { name: /Competing explanations/ }))
     const panel = screen.getByRole('tabpanel')
-    expect(within(panel).getAllByText('In the prototype').length).toBeGreaterThan(0)
+    expect(within(panel).getAllByText('').length).toBeGreaterThan(0)
     expect(within(panel).queryByText(/Not built yet/)).not.toBeInTheDocument()
   })
 

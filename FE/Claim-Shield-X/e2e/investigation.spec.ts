@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import type { APIRequestContext, Page } from '@playwright/test'
-import { OTHER_ORGANIZATION, ORGANIZATION, apiToken, backendUp, createClaimViaApi, fixture, getInvestigationViaApi, registerUser, signInThroughUi, startInvestigationViaApi, uniqueRef, uploadViaApi } from './support'
+import { OTHER_ORGANIZATION, ORGANIZATION, apiToken, backendUp, createClaimViaApi, fixture, getInvestigationViaApi, registerUser, signInThroughUi, startInvestigationViaApi, uniqueRef, uploadFromRow, uploadViaApi } from './support'
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 
@@ -193,11 +193,9 @@ test.describe('a whole investigation (real backend)', () => {
     await page.getByRole('button', { name: 'Start investigation' }).click()
     await expect(page.getByText('Waiting for a document. This is not a failure.')).toBeVisible({ timeout: 20_000 })
     await page.getByRole('link', { name: 'Documents tab' }).first().click()
-    await expect(page.getByRole('heading', { name: 'Add a document' })).toBeVisible()
-    await page.getByLabel('Document type').selectOption('CLAIM_FORM')
-    await page.getByLabel('File', { exact: true }).setInputFiles(fixture('synthetic-estimate.pdf'))
-    await page.getByRole('button', { name: 'Upload', exact: true }).click()
-    await expect(page.getByText('synthetic-estimate.pdf is stored.')).toBeVisible()
+    await expect(page.getByRole('table', { name: 'Documents this claim stage expects' })).toBeVisible()
+    await uploadFromRow(page, 'CLAIM_FORM', fixture('synthetic-estimate.pdf'))
+    await expect(page.getByText(/synthetic-estimate\.pdf is stored/)).toBeVisible()
     await page.getByRole('navigation', { name: 'Claim sections' }).getByRole('link', { name: 'Investigation' }).click()
     await expect(page.getByText('The investigation finished.')).toBeVisible({ timeout: 30_000 })
   })

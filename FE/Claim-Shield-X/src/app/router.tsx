@@ -31,6 +31,8 @@ const routes: RouteObject[] = [
                 errorElement: <RouteError />,
                 children: [
                   { index: true, lazy: async () => ({ Component: (await import('@/pages/AppHomePage')).AppHomePage }) },
+                  { path: 'imports', lazy: async () => ({ Component: (await import('@/pages/ImportsPage')).ImportsPage }) },
+                  { path: 'imports/:importId', lazy: async () => ({ Component: (await import('@/pages/ImportDetailPage')).ImportDetailPage }) },
                   { path: 'claims', lazy: async () => ({ Component: (await import('@/pages/ClaimsListPage')).ClaimsListPage }) },
                   { path: 'claims/new', lazy: async () => ({ Component: (await import('@/pages/ClaimNewPage')).ClaimNewPage }) },
                   {

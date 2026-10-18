@@ -21,3 +21,9 @@ for ITEM in "HISTORICAL_CLAIMS:historical-claims-synthetic.csv" "GARAGE_HISTORY:
     -F "file=@$SAMPLES/${ITEM##*:}" -F "importType=${ITEM%%:*}" -F templateVersion=1 -F source=E2E_SEED \
     | python3 -c 'import sys,json;d=json.load(sys.stdin);print(d["importType"],d["status"],d["counts"])'
 done
+
+# A fixed administrator for the import-screen tests, in its own organization "Org I" (which starts with no history of its own).
+"${PSQL[@]}" -c "insert into organization(id,name,status,created_at,updated_at) select gen_random_uuid(),'Org I','ACTIVE',now(),now() where not exists (select 1 from organization where name='Org I')"
+curl -sS -o /dev/null -X POST "$API/users/register" -H 'Content-Type: application/json' -d '{"email":"import-admin@org-i.test","password":"Passw0rd!x1","organizationName":"Org I"}' || true
+"${PSQL[@]}" -c "update users set role='ORG_ADMIN' where email='import-admin@org-i.test'"
+echo "import-admin@org-i.test is an administrator of Org I"

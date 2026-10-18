@@ -24,7 +24,7 @@ describe('landing content', () => {
     }
   })
 
-  it('marks every stage as in the prototype, because the backend has built all six', () => {
+  it('marks every stage as , because the backend has built all six', () => {
     expect(stages.filter((s) => s.availability === 'planned')).toEqual([])
     expect(stages).toHaveLength(6)
   })

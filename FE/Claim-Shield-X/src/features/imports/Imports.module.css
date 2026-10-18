@@ -1,0 +1,263 @@
+.stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+/* minmax(0, 1fr): a native file input has a wide intrinsic size and must not push the page past the screen on a phone. */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+}
+
+.section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.section h2 {
+  font-size: var(--text-xl);
+}
+
+.lede,
+.note {
+  margin: 0;
+  max-width: var(--measure);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+}
+
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  max-width: 40rem;
+}
+
+.templateRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.fileBox {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-2);
+}
+
+.fileBox label {
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.fileBox p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.fileBox input[type='file'] {
+  max-width: 100%;
+  min-height: var(--touch);
+  font: inherit;
+}
+
+.problem {
+  color: var(--danger) !important;
+  font-weight: 500;
+}
+
+.chosen {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.progress {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.progress progress {
+  width: 100%;
+}
+
+.progress p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.detail {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.callLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-2) 0 0;
+}
+
+.inlineLink,
+.linkButton {
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--signal);
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  min-height: 1.5rem;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+}
+
+.head h2 {
+  font-size: var(--text-xl);
+}
+
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.filter button[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-7);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.facts > div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.facts dt {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.tableWrap {
+  background: var(--surface);
+  border: var(--rule);
+  border-radius: var(--radius-2);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  vertical-align: top;
+  border-top: var(--rule);
+}
+
+.table thead th {
+  border-top: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+}
+
+.errors {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-4);
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.pagerButtons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+@media (max-width: 48rem) {
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .table tr {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border-top: var(--rule);
+  }
+
+  .table tbody tr:first-child {
+    border-top: 0;
+  }
+
+  .table th,
+  .table td {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: var(--space-3);
+    padding: 0;
+    border: 0;
+  }
+
+  .table [data-label]::before {
+    content: attr(data-label);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--ink-soft);
+  }
+}

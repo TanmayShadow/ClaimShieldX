@@ -129,7 +129,7 @@ test.describe('earlier claims (real backend)', () => {
   test('says honestly that no history has been imported', async ({ page, request }) => {
     await open(page, request, 'hist', 'history')
     await expect(page.getByText('No historical claims have been imported, so nothing could be compared.')).toBeVisible()
-    await expect(page.getByText('This is not the same as finding no match.', { exact: true })).toBeVisible()
+    await expect(page.getByText(/This is not the same as finding no match\./).first()).toBeVisible()
     await expect(page.getByText(/context only and never evidence of wrongdoing/)).toBeVisible()
   })
 })

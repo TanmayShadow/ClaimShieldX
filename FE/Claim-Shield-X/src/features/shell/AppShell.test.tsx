@@ -80,7 +80,7 @@ describe('AppShell', () => {
 
   it('shows only implemented destinations by default', async () => {
     const { navEntries } = await import('./nav')
-    expect(navEntries.map((e) => e.label)).toEqual(['Overview', 'Claims'])
+    expect(navEntries.map((e) => e.label)).toEqual(['Overview', 'Claims', 'History imports'])
     expect(navEntries.map((e) => e.label).join(' ')).not.toMatch(/activity|audit|settings|notification/i)
   })
 

@@ -6,7 +6,7 @@ import { StatusMark } from '@/components/ui/StatusMark'
 import styles from './Anatomy.module.css'
 import { stages } from './content'
 
-const availabilityLabel = { available: 'In the prototype', planned: 'Planned' } as const
+const availabilityLabel = { available: '', planned: 'Planned' } as const
 
 /** The investigation workflow as an interactive route. The tags say which stages exist today. */
 export function Anatomy() {
@@ -42,7 +42,7 @@ export function Anatomy() {
         <div className={styles.intro}>
           <h2 id="anatomy-title">Anatomy of an investigation</h2>
           <p>
-            This is the workflow the product is built around. Each stage says whether it exists in the prototype today. Choose a stage to see what
+            This is the workflow the product is built around. Choose a stage to see what
             goes in, what comes out, and what stays with a person.
           </p>
         </div>

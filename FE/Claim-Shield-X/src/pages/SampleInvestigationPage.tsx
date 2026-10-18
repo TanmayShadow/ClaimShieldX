@@ -25,9 +25,9 @@ const nav = [
 ]
 
 const steps: Array<{ id: StepId; label: string; icon: StageIconName; kind: string; title: string; intro: string }> = [
-  { id: 'documents', label: 'Documents', icon: 'extraction', kind: 'In the prototype', title: 'Read the documents', intro: 'Choose a document, then a field. The page marks where on the document the value came from. What could not be read stays unknown.' },
-  { id: 'checks', label: 'Checks', icon: 'checks', kind: 'In the prototype', title: 'Run the deterministic checks', intro: 'Plain code checks figures, dates and repeats. Choose a result to see its values, its evidence and the harmless explanations to rule out first.' },
-  { id: 'history', label: 'History', icon: 'history', kind: 'In the prototype', title: 'Compare with earlier claims', intro: 'Earlier claims that share a token with this one, each with the reason it matched and what is not known about it.' },
+  { id: 'documents', label: 'Documents', icon: 'extraction', kind: '', title: 'Read the documents', intro: 'Choose a document, then a field. The page marks where on the document the value came from. What could not be read stays unknown.' },
+  { id: 'checks', label: 'Checks', icon: 'checks', kind: '', title: 'Run the deterministic checks', intro: 'Plain code checks figures, dates and repeats. Choose a result to see its values, its evidence and the harmless explanations to rule out first.' },
+  { id: 'history', label: 'History', icon: 'history', kind: '', title: 'Compare with earlier claims', intro: 'Earlier claims that share a token with this one, each with the reason it matched and what is not known about it.' },
   { id: 'explanations', label: 'Explanations', icon: 'explanations', kind: 'Planned', title: 'Weigh competing explanations', intro: 'Two explanations for the same facts, side by side, with what supports each, what weakens it and what is unknown.' },
   { id: 'review', label: 'Review', icon: 'review', kind: 'Planned', title: 'A person decides', intro: 'The reviewer chooses what happens next and says why. The tool never takes this step.' },
 ]
@@ -79,7 +79,7 @@ export function SampleInvestigationPage() {
     <PublicShell nav={nav} actions={<SessionAction />} footerNote="This walkthrough is a fiction. Every name, number and document in it is SYNTHETIC DEMO DATA.">
       <div className={styles.banner} data-synthetic>
         <div className={`container ${styles.bannerInner}`}>
-          <span className={styles.bannerStamp}>Synthetic demo data</span>
+          <span className={styles.bannerStamp}>Data</span>
           <span>
             <strong>This case is fictional.</strong> It is read-only and is not connected to any real claim, document or server.
           </span>
